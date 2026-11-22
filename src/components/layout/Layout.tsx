@@ -19,6 +19,8 @@ export default function Layout() {
     window.scrollTo(0, 0);
   }, [pathname]);
 
+  const isHome = pathname === "/";
+
   return (
     <ChatProvider>
       <div className="min-h-screen flex flex-col bg-background text-foreground">
@@ -28,15 +30,19 @@ export default function Layout() {
           className="fixed top-0 left-0 right-0 h-[2px] bg-primary origin-left z-[60] pointer-events-none"
         />
         <Navbar />
-        <main className="flex-grow pt-18">
+        <main className="flex-grow pt-16">
           <AnimatePresence mode="wait">
             <motion.div
               key={pathname}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
+              exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14"
+              className={
+                isHome
+                  ? "w-full"
+                  : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16"
+              }
             >
               <Outlet />
             </motion.div>

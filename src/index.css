@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -7,7 +7,7 @@
 
 @theme inline {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "Playfair Display", Georgia, serif;
+  --font-heading: "Outfit", "Plus Jakarta Sans", ui-sans-serif, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
   --color-background: var(--background);
@@ -36,25 +36,25 @@
 }
 
 :root {
-  --background: #09090b;
+  --background: #050507;
   --foreground: #f4f4f5;
-  --card: #111114;
+  --card: #0c0c10;
   --card-foreground: #f4f4f5;
-  --popover: #111114;
+  --popover: #0c0c10;
   --popover-foreground: #f4f4f5;
-  --primary: #d4af37;
-  --primary-foreground: #09090b;
-  --secondary: #18181b;
+  --primary: #e2be53;
+  --primary-foreground: #050507;
+  --secondary: #131318;
   --secondary-foreground: #f4f4f5;
-  --muted: #18181b;
-  --muted-foreground: #a1a1aa;
-  --accent: #d4af37;
-  --accent-foreground: #09090b;
+  --muted: #131318;
+  --muted-foreground: #9ca3af;
+  --accent: #e2be53;
+  --accent-foreground: #050507;
   --destructive: #ef4444;
   --destructive-foreground: #fafafa;
-  --border: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.075);
   --input: rgba(255, 255, 255, 0.1);
-  --ring: #d4af37;
+  --ring: #e2be53;
   --radius: 0.75rem;
 }
 
@@ -66,6 +66,7 @@
     @apply bg-background text-foreground selection:bg-primary selection:text-primary-foreground antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     letter-spacing: 0.005em;
+    overflow-x: hidden;
   }
   html {
     @apply font-sans;
@@ -73,6 +74,8 @@
   }
   h1, h2, h3 {
     text-wrap: balance;
+    font-family: var(--font-heading);
+    letter-spacing: -0.025em;
   }
 }
 
@@ -81,66 +84,66 @@
 }
 
 .gold-gradient {
-  background: linear-gradient(135deg, #c69c2b 0%, #f3de97 48%, #c69c2b 100%);
+  background: linear-gradient(125deg, #ffffff 0%, #f3df9b 45%, #d6ae43 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .gold-text {
-  color: #d4af37;
+  color: #e2be53;
 }
 
 .gold-border {
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  border: 1px solid rgba(226, 190, 83, 0.32);
 }
 
 .gold-glow {
-  box-shadow: 0 8px 30px -10px rgba(212, 175, 55, 0.25);
+  box-shadow: 0 10px 36px -12px rgba(226, 190, 83, 0.28);
 }
 
 .surface-card {
-  background: #111114;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0c0c10;
+  border: 1px solid rgba(255, 255, 255, 0.075);
   transition: border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .surface-card:hover {
-  border-color: rgba(212, 175, 55, 0.35);
+  border-color: rgba(226, 190, 83, 0.32);
 }
 
 .glass-nav {
-  background: rgba(9, 9, 11, 0.85);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(5, 5, 7, 0.72);
+  backdrop-filter: blur(20px) saturate(140%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 @keyframes ambient-pan {
   0% {
-    transform: translate3d(-4%, -3%, 0) scale(1);
+    transform: translate3d(-3%, -2%, 0) scale(1);
     opacity: 0.45;
   }
   50% {
-    transform: translate3d(4%, 3%, 0) scale(1.06);
-    opacity: 0.72;
+    transform: translate3d(3%, 2%, 0) scale(1.05);
+    opacity: 0.75;
   }
   100% {
-    transform: translate3d(-4%, -3%, 0) scale(1);
+    transform: translate3d(-3%, -2%, 0) scale(1);
     opacity: 0.45;
   }
 }
 
 @keyframes silk-sweep {
   0% {
-    transform: translate3d(-12%, 0, 0) skewX(-12deg);
-    opacity: 0.25;
+    transform: translate3d(-14%, 0, 0) skewX(-12deg);
+    opacity: 0.2;
   }
   50% {
-    transform: translate3d(12%, 0, 0) skewX(-12deg);
-    opacity: 0.55;
+    transform: translate3d(14%, 0, 0) skewX(-12deg);
+    opacity: 0.5;
   }
   100% {
-    transform: translate3d(-12%, 0, 0) skewX(-12deg);
-    opacity: 0.25;
+    transform: translate3d(-14%, 0, 0) skewX(-12deg);
+    opacity: 0.2;
   }
 }
 
@@ -156,9 +159,9 @@
 
 .architectural-grid {
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
-  background-size: 64px 64px;
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 72px 72px;
 }
 
 @media (prefers-reduced-motion: reduce) {

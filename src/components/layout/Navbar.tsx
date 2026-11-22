@@ -21,11 +21,11 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-nav">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-8">
         {/* Zone 1: Brand Lockup */}
         <Link to="/" className="flex items-center gap-3 shrink-0 group">
           <Logo size="sm" className="group-hover:scale-105 transition-transform duration-200" />
-          <span className="font-heading text-lg font-semibold tracking-wider gold-gradient whitespace-nowrap">
+          <span className="font-heading text-base font-semibold tracking-tight text-zinc-50 whitespace-nowrap">
             {config.companyName || "ELITE GROUP"}
           </span>
         </Link>
@@ -39,8 +39,8 @@ export default function Navbar() {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "relative py-2 text-sm font-medium transition-colors whitespace-nowrap shrink-0",
-                  isActive ? "text-primary" : "text-zinc-400 hover:text-zinc-100"
+                  "relative py-1.5 text-sm font-medium transition-colors whitespace-nowrap shrink-0",
+                  isActive ? "text-zinc-50" : "text-zinc-400 hover:text-zinc-100"
                 )}
               >
                 {item.label}
@@ -48,7 +48,7 @@ export default function Navbar() {
                   <motion.div
                     layoutId="nav-underline"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary rounded-full"
+                    className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-primary rounded-full"
                   />
                 )}
               </Link>
@@ -61,10 +61,10 @@ export default function Navbar() {
           <Link
             to="/admin"
             className={cn(
-              "inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide transition-all whitespace-nowrap shrink-0 border",
+              "inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all whitespace-nowrap shrink-0 border",
               pathname === "/admin"
                 ? "bg-primary text-primary-foreground border-primary"
-                : "border-primary/35 text-primary hover:bg-primary/10"
+                : "border-white/15 bg-white/[0.03] text-zinc-200 hover:border-primary/50 hover:text-primary"
             )}
           >
             <Lock className="w-3.5 h-3.5" />

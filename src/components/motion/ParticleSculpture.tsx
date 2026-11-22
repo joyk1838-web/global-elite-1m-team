@@ -291,11 +291,11 @@ export function ParticleSculpture({
       const cy = height * 0.5;
       const perspective = 3.2;
 
-      // Ambient gold radial core glow behind sculpture
-      const glow = ctx.createRadialGradient(cx, cy, 4, cx, cy, scale * 1.45);
-      glow.addColorStop(0, "rgba(212, 175, 55, 0.16)");
-      glow.addColorStop(0.5, "rgba(212, 175, 55, 0.05)");
-      glow.addColorStop(1, "rgba(9, 9, 11, 0)");
+      // Ambient crisp atmospheric radial glow behind sculpture
+      const glow = ctx.createRadialGradient(cx, cy, 4, cx, cy, scale * 1.5);
+      glow.addColorStop(0, "rgba(226, 190, 83, 0.14)");
+      glow.addColorStop(0.45, "rgba(148, 163, 184, 0.04)");
+      glow.addColorStop(1, "rgba(5, 5, 7, 0)");
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, width, height);
 
@@ -335,9 +335,9 @@ export function ParticleSculpture({
           const dx = sx - px;
           const dy = sy - py;
           const dist = Math.hypot(dx, dy);
-          const maxRadius = 90;
+          const maxRadius = 96;
           if (dist < maxRadius && dist > 0.01) {
-            const push = ((maxRadius - dist) / maxRadius) * 16;
+            const push = ((maxRadius - dist) / maxRadius) * 18;
             sx += (dx / dist) * push;
             sy += (dy / dist) * push;
           }
@@ -348,9 +348,9 @@ export function ParticleSculpture({
           sx,
           sy,
           z: z2,
-          size: 0.9 + normalizedDepth * 1.85,
-          alpha: 0.18 + normalizedDepth * 0.78,
-          warmth: (i % 5 === 0 ? 1 : normalizedDepth),
+          size: 0.85 + normalizedDepth * 1.75,
+          alpha: 0.16 + normalizedDepth * 0.82,
+          warmth: i % 4 === 0 ? 1 : normalizedDepth,
         });
       }
 
@@ -361,12 +361,12 @@ export function ParticleSculpture({
         const pt = projected[i];
         ctx.beginPath();
         ctx.arc(pt.sx, pt.sy, pt.size, 0, Math.PI * 2);
-        if (pt.warmth > 0.62) {
-          ctx.fillStyle = `rgba(243, 222, 151, ${pt.alpha.toFixed(3)})`;
-        } else if (pt.warmth > 0.35) {
-          ctx.fillStyle = `rgba(212, 175, 55, ${(pt.alpha * 0.9).toFixed(3)})`;
+        if (pt.warmth > 0.68) {
+          ctx.fillStyle = `rgba(250, 244, 224, ${pt.alpha.toFixed(3)})`;
+        } else if (pt.warmth > 0.38) {
+          ctx.fillStyle = `rgba(226, 190, 83, ${(pt.alpha * 0.92).toFixed(3)})`;
         } else {
-          ctx.fillStyle = `rgba(228, 228, 231, ${(pt.alpha * 0.65).toFixed(3)})`;
+          ctx.fillStyle = `rgba(212, 212, 216, ${(pt.alpha * 0.58).toFixed(3)})`;
         }
         ctx.fill();
       }

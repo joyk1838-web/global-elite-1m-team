@@ -7,7 +7,6 @@ import {
   Send,
   Quote,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { getBrands, getTeam } from "../services/firebase";
 import { Logo } from "@/components/ui/Logo";
@@ -16,6 +15,7 @@ import { useExecutiveChat } from "../context/ChatContext";
 import { DEFAULT_BRANDS, DEFAULT_TEAM, LOCAL_ASSETS } from "../lib/defaults";
 import { ParticleSculpture, type ParticleShape } from "../components/motion/ParticleSculpture";
 import { AnimatedCounter } from "../components/motion/AnimatedCounter";
+import { SpotlightCard } from "../components/motion/SpotlightCard";
 
 const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -117,426 +117,448 @@ export default function Home() {
     openChat(query);
   };
 
+  // Split multi-word hero title cleanly for crisp 2026 contrast without losing Admin edits
+  const titleWords = (config.heroTitle || "Building Excellence").trim().split(/\s+/);
+  const leadWords = titleWords.length > 1 ? titleWords.slice(0, -1).join(" ") : "";
+  const accentWord = titleWords.length > 1 ? titleWords[titleWords.length - 1] : titleWords[0];
+
   return (
-    <div className="space-y-28 md:space-y-36 pb-16">
-      {/* 1. Kinetic Obsidian Hero with Interactive 3D Particle Sphere */}
-      <section className="relative min-h-[82vh] flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-[#070709] px-6 sm:px-10 lg:px-14 py-12 sm:py-16">
-        {/* Atmospheric Backdrop + Architectural Grid */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute inset-0 architectural-grid opacity-70" />
+    <div className="w-full overflow-x-clip">
+      {/* 1. Full-Bleed 2026 Obsidian Hero */}
+      <section className="relative min-h-[calc(100vh-4rem)] flex flex-col justify-between bg-[#050507] overflow-hidden">
+        {/* Masked Architectural Grid & Atmospheric Light */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div
+            className="absolute inset-0 architectural-grid opacity-80"
+            style={{
+              maskImage: "radial-gradient(ellipse 75% 70% at 55% 42%, #000 20%, transparent 100%)",
+              WebkitMaskImage:
+                "radial-gradient(ellipse 75% 70% at 55% 42%, #000 20%, transparent 100%)",
+            }}
+          />
           <div
             className="absolute -inset-1/4 animate-ambient-pan"
             style={{
               background:
-                "radial-gradient(circle at 68% 45%, rgba(212, 175, 55, 0.16) 0%, transparent 48%), radial-gradient(circle at 22% 75%, rgba(99, 102, 241, 0.08) 0%, transparent 45%)",
+                "radial-gradient(circle at 68% 42%, rgba(226, 190, 83, 0.14) 0%, transparent 45%), radial-gradient(circle at 22% 24%, rgba(148, 163, 184, 0.06) 0%, transparent 42%)",
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#070709]/40 via-transparent to-[#070709]" />
+          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#050507] to-transparent" />
         </div>
 
-        {/* Interactive 3D Particle Sphere Layer */}
-        <div className="relative lg:absolute lg:inset-y-0 lg:right-0 lg:w-[54%] h-[280px] sm:h-[340px] lg:h-full z-10 order-1 lg:order-none">
-          <ParticleSculpture shape="sphere" interactive density={560} />
+        {/* Interactive 3D Particle Sphere Stage */}
+        <div className="relative lg:absolute lg:inset-y-0 lg:right-0 lg:w-[56%] h-[300px] sm:h-[380px] lg:h-full z-10">
+          <ParticleSculpture shape="sphere" interactive density={600} />
         </div>
 
-        {/* Hero Foreground Editorial Copy */}
-        <div className="relative z-20 max-w-2xl space-y-6 pt-4 lg:pt-10 pointer-events-none">
+        {/* Main Container */}
+        <div className="relative z-20 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6 lg:pt-24 pb-10 flex-1 flex flex-col justify-between pointer-events-none">
+          <div className="max-w-2xl space-y-7">
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
+              className="flex items-center gap-3.5"
+            >
+              <Logo size="sm" />
+              <span className="text-xs font-medium tracking-[0.18em] uppercase text-zinc-400">
+                {config.heroEyebrow}
+              </span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.06, ease: EASE_OUT_EXPO }}
+              className="font-heading text-5xl sm:text-7xl lg:text-[5.25rem] font-semibold tracking-[-0.035em] leading-[1.02] text-zinc-50"
+            >
+              {leadWords && <span className="block text-zinc-50">{leadWords}</span>}
+              <span className="block gold-gradient">{accentWord}</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.14, ease: EASE_OUT_EXPO }}
+              className="text-base sm:text-lg text-zinc-400 max-w-lg leading-relaxed"
+            >
+              {config.heroSubtitle}
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.22, ease: EASE_OUT_EXPO }}
+              className="flex flex-wrap items-center gap-5 pt-2 pointer-events-auto"
+            >
+              <button
+                type="button"
+                onClick={() => openChat()}
+                className="inline-flex items-center gap-2.5 h-12 px-7 rounded-full bg-zinc-50 text-zinc-950 hover:bg-primary hover:text-zinc-950 text-sm font-semibold transition-all duration-200 hover:scale-[1.02] cursor-pointer"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Ask AI Strategist
+              </button>
+
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-2 h-12 px-6 rounded-full border border-white/15 bg-white/[0.02] hover:border-primary/45 hover:text-primary text-sm font-medium text-zinc-200 transition-colors"
+              >
+                Progress Dashboard
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* Hairline Bottom Metrics Rail */}
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, ease: EASE_OUT_EXPO }}
-            className="flex items-center gap-3.5"
+            transition={{ duration: 0.65, delay: 0.3, ease: EASE_OUT_EXPO }}
+            className="mt-14 pt-8 border-t border-white/[0.08] flex flex-wrap items-end justify-between gap-8"
           >
-            <Logo size="sm" />
-            <span className="text-xs font-medium tracking-[0.2em] uppercase text-primary">
-              {config.heroEyebrow}
-            </span>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.08, ease: EASE_OUT_EXPO }}
-            className="font-heading text-4xl sm:text-6xl lg:text-[4.5rem] font-semibold tracking-tight leading-[1.05] text-zinc-50"
-          >
-            <span className="gold-gradient">{config.heroTitle}</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.16, ease: EASE_OUT_EXPO }}
-            className="text-base sm:text-lg text-zinc-400 max-w-xl leading-relaxed"
-          >
-            {config.heroSubtitle}
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.24, ease: EASE_OUT_EXPO }}
-            className="flex flex-wrap items-center gap-4 pt-2 pointer-events-auto"
-          >
-            <Button
-              type="button"
-              size="lg"
-              onClick={() => openChat()}
-              className="h-12 px-7 rounded-full text-sm font-semibold gold-glow hover:scale-[1.02] transition-transform cursor-pointer"
-            >
-              <MessageSquare className="mr-2 w-4 h-4" />
-              Ask AI Strategist
-            </Button>
-
-            <Link to="/dashboard">
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-12 px-7 rounded-full text-sm font-medium border-white/15 hover:border-primary/45 hover:bg-primary/5 cursor-pointer"
-              >
-                View Progress Dashboard
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </Link>
-          </motion.div>
-        </div>
-
-        {/* Bottom Baseline KPI Strip */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.32, ease: EASE_OUT_EXPO }}
-          className="relative z-20 mt-12 pt-8 border-t border-white/10 grid grid-cols-3 gap-6 max-w-2xl"
-        >
-          <div className="space-y-1">
-            <p className="font-mono text-2xl sm:text-3xl font-semibold text-zinc-100">
-              <AnimatedCounter value={config.netWorth} prefix="$" suffix="+" />
-            </p>
-            <p className="text-xs text-zinc-400">Assets Under Mgmt</p>
-          </div>
-          <div className="space-y-1">
-            <p className="font-mono text-2xl sm:text-3xl font-semibold gold-gradient">
-              <AnimatedCounter value={config.multiplier} prefix="x" />
-            </p>
-            <p className="text-xs text-zinc-400">Growth Multiplier</p>
-          </div>
-          <div className="space-y-1">
-            <p className="font-mono text-2xl sm:text-3xl font-semibold text-zinc-100 tabular-nums">
-              24/7
-            </p>
-            <p className="text-xs text-zinc-400">Executive Advisory</p>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* 2. Interactive Morphing Capabilities Section (Video-Inspired 3D Canvas + Deck) */}
-      <section className="space-y-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
-          <div className="space-y-2.5">
-            <p className="text-xs font-medium tracking-[0.2em] uppercase text-primary">
-              Operating Architecture
-            </p>
-            <h2 className="font-heading text-3xl md:text-5xl font-semibold tracking-tight text-zinc-50">
-              Our Capabilities
-            </h2>
-          </div>
-          <p className="max-w-md text-sm md:text-base text-zinc-400 leading-relaxed">
-            Hover or select any capability below to inspect our execution model and watch the live 3D lattice transform.
-          </p>
-        </div>
-
-        <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
-          {/* Left Column: Morphing 3D Particle Canvas */}
-          <div className="lg:col-span-5 rounded-2xl border border-white/10 bg-[#0b0b0e] p-6 flex flex-col justify-between min-h-[340px] lg:min-h-[460px] relative overflow-hidden">
-            <div className="flex items-center justify-between text-xs text-zinc-400 z-10">
-              <span className="font-mono text-primary tabular-nums">{activeCap.num}</span>
-              <span>{activeCap.category}</span>
+            <div className="grid grid-cols-3 gap-8 sm:gap-14">
+              <div className="space-y-1">
+                <p className="font-mono text-2xl sm:text-3xl font-medium text-zinc-50">
+                  <AnimatedCounter value={config.netWorth} prefix="$" suffix="+" />
+                </p>
+                <p className="text-xs text-zinc-500">Assets Under Mgmt</p>
+              </div>
+              <div className="space-y-1">
+                <p className="font-mono text-2xl sm:text-3xl font-medium text-primary">
+                  <AnimatedCounter value={config.multiplier} prefix="x" />
+                </p>
+                <p className="text-xs text-zinc-500">Growth Multiplier</p>
+              </div>
+              <div className="space-y-1">
+                <p className="font-mono text-2xl sm:text-3xl font-medium text-zinc-50 tabular-nums">
+                  24/7
+                </p>
+                <p className="text-xs text-zinc-500">Executive Advisory</p>
+              </div>
             </div>
 
-            <div className="flex-1 min-h-[260px] relative my-2">
-              <ParticleSculpture
-                shape={activeCap.shape}
-                interactive
-                density={480}
-              />
-            </div>
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeCap.num}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
-                className="pt-4 border-t border-white/10 flex items-center justify-between gap-4 z-10"
-              >
-                <span className="font-heading text-xl font-semibold text-zinc-100">
-                  {activeCap.title}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => openChat(`Tell me more about ELITE GROUP's ${activeCap.title} capability.`)}
-                  className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1 cursor-pointer shrink-0"
-                >
-                  Ask Strategist
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                </button>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          {/* Right Column: Interactive Capability Cards */}
-          <div className="lg:col-span-7 grid sm:grid-cols-2 gap-4">
-            {CAPABILITIES.map((cap, idx) => {
-              const isActive = idx === activeCapIndex;
-              return (
-                <motion.button
-                  key={cap.num}
-                  type="button"
-                  onMouseEnter={() => setActiveCapIndex(idx)}
-                  onFocus={() => setActiveCapIndex(idx)}
-                  onClick={() => setActiveCapIndex(idx)}
-                  layout
-                  transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
-                  className={`text-left p-6 rounded-2xl border transition-colors flex flex-col justify-between gap-5 cursor-pointer ${
-                    isActive
-                      ? "bg-gradient-to-br from-primary/[0.16] via-[#131318] to-[#0b0b0e] border-primary/50 shadow-[0_12px_36px_-14px_rgba(212,175,55,0.3)]"
-                      : "bg-[#111114] border-white/10 hover:border-white/25"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <span
-                        className={`font-mono text-xs tabular-nums ${
-                          isActive ? "text-primary" : "text-zinc-500"
-                        }`}
-                      >
-                        {cap.num}
-                      </span>
-                      <h3 className="font-heading text-xl font-semibold text-zinc-100">
-                        {cap.title}
-                      </h3>
-                    </div>
-                    <ArrowUpRight
-                      className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
-                        isActive ? "text-primary translate-x-0.5 -translate-y-0.5" : "text-zinc-500"
-                      }`}
-                    />
-                  </div>
-
-                  <p className="text-sm text-zinc-400 leading-relaxed">
-                    {cap.summary}
-                  </p>
-
-                  <div className="pt-3 border-t border-white/10 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-zinc-400">
-                    {cap.pillars.map((pillar, pIdx) => (
-                      <span key={pillar} className="inline-flex items-center gap-2.5">
-                        <span className={isActive ? "text-zinc-200" : "text-zinc-400"}>
-                          {pillar}
-                        </span>
-                        {pIdx < cap.pillars.length - 1 && (
-                          <span aria-hidden="true" className="text-zinc-600">
-                            ·
-                          </span>
-                        )}
-                      </span>
-                    ))}
-                  </div>
-                </motion.button>
-              );
-            })}
-          </div>
+            <p className="hidden md:block text-xs text-zinc-500 tracking-wide">
+              ELITE GROUP · Global Trajectory
+            </p>
+          </motion.div>
         </div>
       </section>
 
-      {/* 3. Interactive Ventures & Case Studies Preview (Video-Inspired Hover Row Showcase) */}
-      <section className="space-y-12">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
-          <div className="space-y-2.5">
-            <p className="text-xs font-medium tracking-[0.2em] uppercase text-primary">
-              Portfolio Divisions
+      {/* 2. Morphing 3D Capabilities Showcase */}
+      <section className="border-t border-white/[0.07] py-24 sm:py-32">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-3">
+              <p className="text-xs font-medium tracking-[0.2em] uppercase text-primary">
+                Operating Architecture
+              </p>
+              <h2 className="font-heading text-3xl sm:text-5xl font-semibold tracking-tight text-zinc-50">
+                Engineered for compounding scale
+              </h2>
+            </div>
+            <p className="max-w-md text-sm sm:text-base text-zinc-400 leading-relaxed">
+              Select or hover any discipline below to inspect our execution pillars and watch the interactive lattice morph.
             </p>
-            <h2 className="font-heading text-3xl md:text-5xl font-semibold tracking-tight text-zinc-50">
-              Core Ventures
-            </h2>
           </div>
-          <p className="max-w-md text-sm md:text-base text-zinc-400 leading-relaxed">
-            Focused operating companies spanning consumer luxury, structured finance, and tailored apparel.
-          </p>
-        </div>
 
-        <div className="grid lg:grid-cols-12 gap-10 items-start">
-          {/* Interactive Numbered Venture Rows */}
-          <div className="lg:col-span-7 divide-y divide-white/10 border-y border-white/10">
-            {brands.map((brand, idx) => {
-              const isSelected = idx === activeVentureIndex;
-              return (
-                <div
-                  key={brand.id || idx}
-                  onMouseEnter={() => setActiveVentureIndex(idx)}
-                  onClick={() => setActiveVentureIndex(idx)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setActiveVentureIndex(idx);
-                    }
-                  }}
-                  className={`group py-6 px-4 sm:px-5 transition-colors cursor-pointer flex items-center justify-between gap-6 ${
-                    isSelected ? "bg-white/[0.04]" : "hover:bg-white/[0.02]"
-                  }`}
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+            {/* Left Sticky Void 3D Morphing Canvas */}
+            <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
+              <div className="h-[320px] sm:h-[380px] lg:h-[420px] relative">
+                <ParticleSculpture shape={activeCap.shape} interactive density={500} />
+              </div>
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeCap.num}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
+                  className="pt-5 border-t border-white/[0.08] flex items-center justify-between gap-4"
                 >
-                  <div className="flex items-baseline gap-5 sm:gap-7 min-w-0">
-                    <span
-                      className={`font-mono text-xs tabular-nums shrink-0 transition-colors ${
-                        isSelected ? "text-primary" : "text-zinc-500"
-                      }`}
-                    >
-                      {String(idx + 1).padStart(2, "0")}
-                    </span>
-                    <div className="min-w-0 space-y-1">
-                      <h3
-                        className={`font-heading text-2xl sm:text-3xl font-semibold tracking-tight transition-colors truncate ${
-                          isSelected ? "text-zinc-50" : "text-zinc-300 group-hover:text-zinc-100"
-                        }`}
-                      >
-                        {brand.name}
-                      </h3>
-                      <p className="text-xs text-zinc-400">
-                        <span>{brand.tagline}</span>
-                        <span aria-hidden="true" className="mx-2 text-zinc-600">
-                          ·
-                        </span>
-                        <span>Active Operating Unit</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  <Link
-                    to={brand.link && brand.link !== "#" ? brand.link : "/vision"}
-                    aria-label={`Explore ${brand.name}`}
-                    className={`w-10 h-10 rounded-full border flex items-center justify-center shrink-0 transition-all ${
-                      isSelected
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-white/15 text-zinc-400 group-hover:border-primary/50 group-hover:text-primary"
-                    }`}
-                  >
-                    <ArrowUpRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Right Live Preview Frame */}
-          <div className="lg:col-span-5">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeVenture?.id || activeVentureIndex}
-                initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.98 }}
-                transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
-                className="rounded-2xl border border-white/10 bg-[#111114] overflow-hidden"
-              >
-                <div className="aspect-[16/10] relative overflow-hidden bg-zinc-900">
-                  <img
-                    src={activeVenture?.image || LOCAL_ASSETS.corporateHq}
-                    alt={activeVenture?.name || "ELITE GROUP Venture"}
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.corporateHq;
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
-                </div>
-
-                <div className="p-7 space-y-4">
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-primary">
-                      {activeVenture?.tagline}
+                  <div>
+                    <p className="text-xs text-zinc-500">{activeCap.category}</p>
+                    <p className="font-heading text-xl font-semibold text-zinc-100 mt-0.5">
+                      {activeCap.num}. {activeCap.title}
                     </p>
-                    <h3 className="font-heading text-2xl font-semibold text-zinc-100">
-                      {activeVenture?.name}
-                    </h3>
                   </div>
-                  <p className="text-sm text-zinc-400 leading-relaxed">
-                    {activeVenture?.desc}
-                  </p>
-                  <div className="pt-2 flex items-center justify-between gap-4 border-t border-white/10">
-                    <Link
-                      to={
-                        activeVenture?.link && activeVenture.link !== "#"
-                          ? activeVenture.link
-                          : "/vision"
-                      }
-                      className="inline-flex items-center text-xs font-semibold uppercase tracking-widest text-primary hover:underline"
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openChat(`Explain ELITE GROUP's ${activeCap.title} framework.`)
+                    }
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline cursor-pointer shrink-0"
+                  >
+                    Ask Strategist
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Right Interactive Cursor-Spotlight Grid */}
+            <div className="lg:col-span-7 grid sm:grid-cols-2 gap-4">
+              {CAPABILITIES.map((cap, idx) => {
+                const isActive = idx === activeCapIndex;
+                return (
+                  <div key={cap.num} className="h-full">
+                    <SpotlightCard
+                      active={isActive}
+                      onMouseEnter={() => setActiveCapIndex(idx)}
+                      onFocus={() => setActiveCapIndex(idx)}
+                      className="h-full"
                     >
-                      Explore Venture
-                      <ArrowRight className="ml-2 w-3.5 h-3.5" />
-                    </Link>
                     <button
                       type="button"
-                      onClick={() =>
-                        openChat(`Give me an executive brief on ${activeVenture?.name}.`)
-                      }
-                      className="text-xs text-zinc-400 hover:text-zinc-100 transition-colors cursor-pointer"
+                      onClick={() => setActiveCapIndex(idx)}
+                      className="w-full h-full text-left p-6 flex flex-col justify-between gap-5 cursor-pointer"
                     >
-                      Ask Strategist
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-1">
+                          <span
+                            className={`font-mono text-xs tabular-nums ${
+                              isActive ? "text-primary" : "text-zinc-500"
+                            }`}
+                          >
+                            {cap.num}
+                          </span>
+                          <h3 className="font-heading text-lg font-semibold text-zinc-100">
+                            {cap.title}
+                          </h3>
+                        </div>
+                        <ArrowUpRight
+                          className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
+                            isActive
+                              ? "text-primary translate-x-0.5 -translate-y-0.5"
+                              : "text-zinc-600"
+                          }`}
+                        />
+                      </div>
+
+                      <p className="text-sm text-zinc-400 leading-relaxed">
+                        {cap.summary}
+                      </p>
+
+                      <div className="pt-3 border-t border-white/[0.06] flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-500">
+                        {cap.pillars.map((pillar, pIdx) => (
+                          <span key={pillar} className="inline-flex items-center gap-2">
+                            <span className={isActive ? "text-zinc-300" : "text-zinc-500"}>
+                              {pillar}
+                            </span>
+                            {pIdx < cap.pillars.length - 1 && (
+                              <span aria-hidden="true" className="text-zinc-700">
+                                ·
+                              </span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
                     </button>
+                  </SpotlightCard>
                   </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 4. Curved Horizon Expansion Arc (Inspired by Video 00:22) + Leadership */}
-      <section className="space-y-20">
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#070709] pt-16 pb-14 px-6 text-center">
-          {/* Luminous Curved Horizon Arc */}
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-44"
-            aria-hidden="true"
-          >
-            <svg
-              viewBox="0 0 1200 220"
-              preserveAspectRatio="none"
-              className="w-full h-full"
-            >
-              <defs>
-                <radialGradient id="horizonGlow" cx="50%" cy="100%" r="70%">
-                  <stop offset="0%" stopColor="rgba(212, 175, 55, 0.35)" />
-                  <stop offset="55%" stopColor="rgba(212, 175, 55, 0.08)" />
-                  <stop offset="100%" stopColor="rgba(9, 9, 11, 0)" />
-                </radialGradient>
-              </defs>
-              <path
-                d="M -40 195 Q 600 10 1240 195 L 1240 220 L -40 220 Z"
-                fill="url(#horizonGlow)"
-              />
-              <path
-                d="M -40 195 Q 600 10 1240 195"
-                fill="none"
-                stroke="rgba(212, 175, 55, 0.55)"
-                strokeWidth="1.5"
-              />
-            </svg>
+      {/* 3. Full-Bleed Ventures Index & Live Hover Visual */}
+      <section className="border-t border-white/[0.07] py-24 sm:py-32 bg-[#07070a]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-3">
+              <p className="text-xs font-medium tracking-[0.2em] uppercase text-primary">
+                Portfolio Divisions
+              </p>
+              <h2 className="font-heading text-3xl sm:text-5xl font-semibold tracking-tight text-zinc-50">
+                Core Ventures
+              </h2>
+            </div>
+            <p className="max-w-md text-sm sm:text-base text-zinc-400 leading-relaxed">
+              Category-focused businesses spanning ultra-premium consumer beverages, structured finance, and tailored apparel.
+            </p>
           </div>
 
-          <div className="relative z-10 max-w-3xl mx-auto space-y-6">
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+            {/* Numbered Editorial Venture List */}
+            <div className="lg:col-span-7 divide-y divide-white/[0.08] border-y border-white/[0.08]">
+              {brands.map((brand, idx) => {
+                const isSelected = idx === activeVentureIndex;
+                return (
+                  <div
+                    key={brand.id || idx}
+                    onMouseEnter={() => setActiveVentureIndex(idx)}
+                    onClick={() => setActiveVentureIndex(idx)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setActiveVentureIndex(idx);
+                      }
+                    }}
+                    className={`group py-7 px-3 sm:px-5 transition-colors cursor-pointer flex items-center justify-between gap-6 ${
+                      isSelected ? "bg-white/[0.03]" : "hover:bg-white/[0.015]"
+                    }`}
+                  >
+                    <div className="flex items-baseline gap-6 sm:gap-8 min-w-0">
+                      <span
+                        className={`font-mono text-xs tabular-nums shrink-0 transition-colors ${
+                          isSelected ? "text-primary" : "text-zinc-600"
+                        }`}
+                      >
+                        {String(idx + 1).padStart(2, "0")}
+                      </span>
+                      <div className="min-w-0 space-y-1">
+                        <h3
+                          className={`font-heading text-2xl sm:text-3xl font-semibold tracking-tight transition-colors truncate ${
+                            isSelected
+                              ? "text-zinc-50"
+                              : "text-zinc-400 group-hover:text-zinc-100"
+                          }`}
+                        >
+                          {brand.name}
+                        </h3>
+                        <p className="text-xs text-zinc-500">
+                          <span>{brand.tagline}</span>
+                          <span aria-hidden="true" className="mx-2 text-zinc-700">
+                            ·
+                          </span>
+                          <span>Operating Division</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <Link
+                      to={brand.link && brand.link !== "#" ? brand.link : "/vision"}
+                      aria-label={`Explore ${brand.name}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className={`w-10 h-10 rounded-full border flex items-center justify-center shrink-0 transition-all duration-200 ${
+                        isSelected
+                          ? "border-primary bg-primary text-zinc-950 scale-105"
+                          : "border-white/15 text-zinc-500 group-hover:border-white/35 group-hover:text-zinc-100"
+                      }`}
+                    >
+                      <ArrowUpRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Sticky Preview Frame */}
+            <div className="lg:col-span-5 lg:sticky lg:top-24">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeVenture?.id || activeVentureIndex}
+                  initial={{ opacity: 0, y: 10, scale: 0.985 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.985 }}
+                  transition={{ duration: 0.32, ease: EASE_OUT_EXPO }}
+                  className="rounded-2xl border border-white/[0.08] bg-[#0b0b0f] overflow-hidden"
+                >
+                  <div className="aspect-[16/10] relative overflow-hidden bg-zinc-950">
+                    <img
+                      src={activeVenture?.image || LOCAL_ASSETS.corporateHq}
+                      alt={activeVenture?.name || "ELITE GROUP Venture"}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.corporateHq;
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b0f] via-black/15 to-transparent" />
+                  </div>
+
+                  <div className="p-7 space-y-4">
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-primary">
+                        {activeVenture?.tagline}
+                      </p>
+                      <h3 className="font-heading text-2xl font-semibold text-zinc-50">
+                        {activeVenture?.name}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-zinc-400 leading-relaxed">
+                      {activeVenture?.desc}
+                    </p>
+                    <div className="pt-3 border-t border-white/[0.07] flex items-center justify-between gap-4">
+                      <Link
+                        to={
+                          activeVenture?.link && activeVenture.link !== "#"
+                            ? activeVenture.link
+                            : "/vision"
+                        }
+                        className="inline-flex items-center text-xs font-semibold uppercase tracking-widest text-zinc-100 hover:text-primary transition-colors"
+                      >
+                        Explore Division
+                        <ArrowRight className="ml-2 w-3.5 h-3.5" />
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openChat(`Give me an executive brief on ${activeVenture?.name}.`)
+                        }
+                        className="text-xs text-zinc-400 hover:text-primary transition-colors cursor-pointer"
+                      >
+                        Ask Strategist
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Full-Bleed Luminous Curved Horizon & Executive Leadership */}
+      <section className="relative border-t border-white/[0.07] pt-24 pb-24 sm:pb-32 overflow-hidden">
+        {/* Full-Width Curved Horizon Rim */}
+        <div
+          className="pointer-events-none max-w-6xl mx-auto px-4 relative"
+          aria-hidden="true"
+        >
+          <svg
+            viewBox="0 0 1200 160"
+            preserveAspectRatio="none"
+            className="w-full h-24 sm:h-36"
+          >
+            <defs>
+              <radialGradient id="horizonRimGlow" cx="50%" cy="100%" r="65%">
+                <stop offset="0%" stopColor="rgba(226, 190, 83, 0.28)" />
+                <stop offset="60%" stopColor="rgba(226, 190, 83, 0.06)" />
+                <stop offset="100%" stopColor="rgba(5, 5, 7, 0)" />
+              </radialGradient>
+            </defs>
+            <path
+              d="M 0 150 Q 600 8 1200 150 L 1200 160 L 0 160 Z"
+              fill="url(#horizonRimGlow)"
+            />
+            <path
+              d="M 0 150 Q 600 8 1200 150"
+              fill="none"
+              stroke="rgba(226, 190, 83, 0.45)"
+              strokeWidth="1.25"
+            />
+          </svg>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
+          <div className="max-w-3xl mx-auto text-center space-y-5 -mt-4">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
               Global Mandate
             </p>
-            <h2 className="font-heading text-3xl sm:text-4xl font-semibold text-zinc-50">
+            <h2 className="font-heading text-3xl sm:text-5xl font-semibold tracking-tight text-zinc-50">
               Expanding Across Strategic Corridors
             </h2>
-            <p className="text-sm sm:text-base text-zinc-400">
+            <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
               {config.vision}
             </p>
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm sm:text-base font-medium text-zinc-200 tracking-wide">
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-x-7 gap-y-2 text-sm font-medium text-zinc-300">
               <span>Dhaka HQ</span>
               <span className="text-primary/60" aria-hidden="true">·</span>
               <span>Dubai</span>
@@ -546,99 +568,102 @@ export default function Home() {
               <span>Singapore</span>
             </div>
           </div>
-        </div>
 
-        {/* Founder & Executive Leadership */}
-        <div className="space-y-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
-            <div className="space-y-2.5">
-              <p className="text-xs font-medium tracking-[0.2em] uppercase text-primary">
-                Executive Board
-              </p>
-              <h2 className="font-heading text-3xl md:text-5xl font-semibold tracking-tight text-zinc-50">
-                Leadership Team
-              </h2>
-            </div>
-            <Link to="/team">
-              <Button
-                variant="outline"
-                className="border-white/15 hover:border-primary/40 hover:bg-primary/5 text-sm rounded-full px-6"
+          {/* Executive Leadership Board */}
+          <div className="space-y-12">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/[0.08] pb-8">
+              <div className="space-y-2.5">
+                <p className="text-xs font-medium tracking-[0.2em] uppercase text-primary">
+                  Executive Board
+                </p>
+                <h2 className="font-heading text-3xl sm:text-5xl font-semibold tracking-tight text-zinc-50">
+                  Leadership Team
+                </h2>
+              </div>
+              <Link
+                to="/team"
+                className="inline-flex items-center gap-2 h-10 px-5 rounded-full border border-white/15 hover:border-primary/45 hover:text-primary text-xs font-medium text-zinc-200 transition-colors self-start md:self-auto"
               >
                 View Full Leadership
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </Link>
-          </div>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
 
-          <div className="grid md:grid-cols-3 gap-7">
-            {teamMembers.map((member, i) => (
-              <motion.div
-                key={member.id || i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.55, delay: i * 0.08, ease: EASE_OUT_EXPO }}
-                viewport={{ once: true, amount: 0.15 }}
-                className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/10 bg-zinc-900"
-              >
-                <img
-                  src={member.image}
-                  alt={member.name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.strategyRoom;
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-7">
-                  <p className="text-primary text-xs font-medium tracking-wide mb-1">
-                    {member.role}
-                  </p>
-                  <h3 className="font-heading text-2xl font-semibold text-white">
-                    {member.name}
-                  </h3>
-                </div>
-              </motion.div>
-            ))}
+            <div className="grid md:grid-cols-3 gap-6">
+              {teamMembers.map((member, i) => (
+                <motion.div
+                  key={member.id || i}
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.55, delay: i * 0.08, ease: EASE_OUT_EXPO }}
+                  viewport={{ once: true, amount: 0.15 }}
+                  className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c0c10]"
+                >
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 group-hover:scale-[1.04]"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.strategyRoom;
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent flex flex-col justify-end p-7">
+                    <p className="text-primary text-xs font-medium tracking-wide mb-1">
+                      {member.role}
+                    </p>
+                    <h3 className="font-heading text-2xl font-semibold text-white">
+                      {member.name}
+                    </h3>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 5. Interactive Executive Strategist Prompt + Silk Horizon Closing Banner */}
-      <section className="space-y-8">
-        {/* Direct Interactive Strategist Prompt */}
-        <div className="rounded-3xl border border-white/10 bg-[#111114] p-7 sm:p-10 lg:p-12 grid lg:grid-cols-12 gap-8 items-center">
-          <div className="lg:col-span-6 space-y-3">
-            <p className="text-xs font-medium tracking-[0.2em] uppercase text-primary">
-              Executive Intelligence
-            </p>
-            <h2 className="font-heading text-2xl sm:text-3xl font-semibold text-zinc-50">
-              Consult the AI Strategist
-            </h2>
-            <p className="text-sm text-zinc-400 leading-relaxed max-w-lg">
-              Start an interactive briefing on our revenue roadmap, portfolio ventures, or 2030 expansion pillars.
-            </p>
-          </div>
+      {/* 5. 2026 Executive Command Bar + Silk Horizon Closing Banner */}
+      <section className="border-t border-white/[0.07] bg-[#07070a] py-24 sm:py-32 relative overflow-hidden">
+        <div
+          className="pointer-events-none absolute -inset-y-16 left-1/4 w-2/3 bg-gradient-to-r from-transparent via-primary/[0.12] to-transparent blur-3xl animate-silk-sweep"
+          aria-hidden="true"
+        />
 
-          <div className="lg:col-span-6 space-y-3">
-            <form onSubmit={handleInlineAsk} className="flex items-center gap-2">
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+          {/* Interactive Strategist Command Palette Bar */}
+          <div className="rounded-2xl border border-white/[0.09] bg-[#0c0c12]/90 backdrop-blur-xl p-6 sm:p-8 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-medium tracking-[0.18em] uppercase text-primary">
+                  Executive Intelligence
+                </p>
+                <h2 className="font-heading text-2xl font-semibold text-zinc-50 mt-1">
+                  Consult the AI Strategist
+                </h2>
+              </div>
+              <p className="text-xs text-zinc-500">Real-time portfolio & roadmap synthesis</p>
+            </div>
+
+            <form onSubmit={handleInlineAsk} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <input
                 type="text"
                 value={inlinePrompt}
                 onChange={(e) => setInlinePrompt(e.target.value)}
-                placeholder="Ask about our $1K to $1M plan or divisions..."
-                className="flex-1 h-12 px-4 rounded-full bg-black/50 border border-white/15 focus:border-primary/60 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none transition-colors"
+                placeholder="Ask about our $1K to $1M scaling strategy, divisions, or 2030 targets..."
+                className="flex-1 h-12 px-5 rounded-full bg-black/50 border border-white/15 focus:border-primary/60 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none transition-colors"
               />
-              <Button
+              <button
                 type="submit"
-                size="lg"
-                className="h-12 px-6 rounded-full font-semibold shrink-0 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full bg-zinc-50 text-zinc-950 hover:bg-primary text-sm font-semibold transition-colors shrink-0 cursor-pointer"
               >
-                <Send className="w-4 h-4 mr-2" />
-                Start Chat
-              </Button>
+                <Send className="w-4 h-4" />
+                Start Briefing
+              </button>
             </form>
-            <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-400">
-              <span>Quick topics:</span>
+
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-zinc-500">
+              <span>Quick briefings:</span>
               {["$1M Roadmap", "Elite Soft Drink", "Leadership Board"].map((topic) => (
                 <button
                   key={topic}
@@ -651,43 +676,33 @@ export default function Home() {
               ))}
             </div>
           </div>
-        </div>
 
-        {/* Closing Atmospheric Banner + Founder Statement */}
-        <div className="relative overflow-hidden rounded-3xl border border-primary/25 bg-[#09090d] px-6 sm:px-12 py-16 sm:py-20">
-          <div
-            className="pointer-events-none absolute -inset-y-12 left-1/4 w-2/3 bg-gradient-to-r from-transparent via-primary/20 to-transparent blur-3xl animate-silk-sweep"
-            aria-hidden="true"
-          />
-          <div className="relative z-10 max-w-3xl mx-auto text-center space-y-6">
-            <Quote className="w-7 h-7 text-primary/70 mx-auto" />
+          {/* Closing Editorial Quote & Final Action */}
+          <div className="text-center space-y-6 pt-4">
+            <Quote className="w-6 h-6 text-primary/70 mx-auto" />
             <h2 className="font-heading text-3xl sm:text-5xl font-semibold tracking-tight text-zinc-50 leading-tight">
               We turn bold vision into lasting global enterprises.
             </h2>
-            <p className="font-heading italic text-lg sm:text-xl text-zinc-300 leading-relaxed">
+            <p className="text-base sm:text-lg text-zinc-400 leading-relaxed max-w-2xl mx-auto">
               "{config.mdBannerQuote}"
             </p>
             <p className="text-xs font-medium tracking-widest uppercase text-primary">
               {config.mdName} · {config.mdRole}
             </p>
             <div className="pt-3 flex flex-wrap items-center justify-center gap-4">
-              <Button
+              <button
                 type="button"
-                size="lg"
                 onClick={() => openChat()}
-                className="h-12 px-8 rounded-full font-semibold gold-glow cursor-pointer"
+                className="inline-flex items-center gap-2 h-12 px-8 rounded-full bg-primary text-zinc-950 hover:brightness-110 text-sm font-semibold transition-all cursor-pointer"
               >
                 Launch Strategist Chat
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-              <Link to="/vision">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-12 px-7 rounded-full border-white/15 hover:border-primary/45 hover:bg-primary/5 cursor-pointer"
-                >
-                  Explore Vision 2030
-                </Button>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <Link
+                to="/vision"
+                className="inline-flex items-center gap-2 h-12 px-7 rounded-full border border-white/15 hover:border-primary/45 hover:text-primary text-sm font-medium text-zinc-200 transition-colors"
+              >
+                Explore Vision 2030
               </Link>
             </div>
           </div>

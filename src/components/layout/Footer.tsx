@@ -43,7 +43,7 @@ export default function Footer() {
   ].filter((item) => Boolean(item.href && item.href.trim() !== ""));
 
   return (
-    <footer className="bg-[#070709] border-t border-white/10 mt-auto">
+    <footer className="bg-[#050507] border-t border-white/[0.07] mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           {/* Brand + Live Executive Clock Column */}
@@ -51,7 +51,7 @@ export default function Footer() {
             <Link to="/" className="inline-flex items-center gap-3">
               <Logo size="md" />
               <div className="flex flex-col leading-tight">
-                <span className="font-heading text-xl font-semibold tracking-wider gold-gradient">
+                <span className="font-heading text-lg font-semibold tracking-tight text-zinc-50">
                   {config.companyName || "ELITE GROUP"}
                 </span>
                 <span className="text-xs text-zinc-400">
