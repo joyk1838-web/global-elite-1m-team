@@ -65,34 +65,36 @@ export default function Gallery() {
         {filteredPhotos.map((photo, i) => (
           <div key={photo.id || i}>
             <Dialog>
-              <DialogTrigger asChild>
-                <motion.button
-                  type="button"
-                  layout
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: i * 0.04, ease: EASE_OUT_EXPO }}
-                  className="group relative text-left cursor-zoom-in overflow-hidden rounded-2xl surface-card aspect-[4/3] w-full"
-                >
-                  <img
-                    src={photo.url}
-                    alt={photo.title}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    referrerPolicy="no-referrer"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.corporateHq;
-                    }}
+              <DialogTrigger
+                render={
+                  <motion.button
+                    type="button"
+                    layout
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: i * 0.04, ease: EASE_OUT_EXPO }}
+                    className="group relative text-left cursor-zoom-in overflow-hidden rounded-2xl surface-card aspect-[4/3] w-full"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex flex-col justify-end p-5">
-                    <span className="text-[11px] font-medium text-primary mb-1">
-                      {photo.category || "Archive"}
-                    </span>
-                    <h3 className="text-base font-semibold text-white">{photo.title}</h3>
-                    <div className="absolute top-4 right-4 bg-black/60 border border-white/15 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <Maximize2 className="w-4 h-4 text-primary" />
-                    </div>
+                }
+              >
+                <img
+                  src={photo.url}
+                  alt={photo.title}
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.corporateHq;
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex flex-col justify-end p-5">
+                  <span className="text-[11px] font-medium text-primary mb-1">
+                    {photo.category || "Archive"}
+                  </span>
+                  <h3 className="text-base font-semibold text-white">{photo.title}</h3>
+                  <div className="absolute top-4 right-4 bg-black/60 border border-white/15 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <Maximize2 className="w-4 h-4 text-primary" />
                   </div>
-                </motion.button>
+                </div>
               </DialogTrigger>
               <DialogContent className="max-w-4xl p-0 overflow-hidden bg-[#09090b] border border-white/10">
                 <DialogTitle className="sr-only">{photo.title}</DialogTitle>
