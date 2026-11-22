@@ -1,95 +1,128 @@
 import { motion } from "framer-motion";
-import { Rocket, Globe, Layers, Zap, TrendingUp, Trophy } from "lucide-react";
+import { Layers, Zap, Trophy } from "lucide-react";
+import { useSiteConfig } from "../context/SiteContext";
+import { LOCAL_ASSETS } from "../lib/defaults";
 
-const goals = [
-  { year: "2025", title: "The Foundation", desc: "Setting up core systems and initial capital flow.", icon: Zap },
-  { year: "2026", title: "System Building", desc: "Automating operations and recruiting top talent.", icon: Layers },
-  { year: "2027", title: "Scaling Up", desc: "Exponential growth in revenue and market presence.", icon: Rocket },
-  { year: "2028", title: "Brand Expansion", desc: "Launching secondary businesses in the ecosystem.", icon: Globe },
-  { year: "2030", title: "Million Target", desc: "Hitting the $1M valuation and achieving total freedom.", icon: Trophy }
-];
+const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 export default function Vision() {
+  const { config } = useSiteConfig();
+
+  const numericNetWorth = parseFloat(String(config.netWorth || "12450").replace(/,/g, "")) || 12450;
+  const numericTarget = parseFloat(String(config.valuationTarget || "1000000").replace(/,/g, "")) || 1000000;
+  const progressPct = Math.min(100, Math.max(4, Math.round((numericNetWorth / numericTarget) * 100)));
+
   return (
-    <div className="space-y-32 pb-20">
-      <div className="text-center space-y-6 max-w-3xl mx-auto">
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight gold-gradient">VISION 2030</h1>
-        <p className="text-xl text-muted-foreground font-light">
-          A roadmap for total market dominance. We aren't just looking at the next month; 
-          we are architectural designers of the next decade.
+    <div className="space-y-20 pb-16">
+      <div className="text-center space-y-4 max-w-3xl mx-auto">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+          Long-Term Horizon
+        </p>
+        <h1 className="font-heading text-4xl md:text-6xl font-semibold tracking-tight gold-gradient">
+          Vision 2030
+        </h1>
+        <p className="text-base md:text-lg text-zinc-400 leading-relaxed">
+          {config.vision}
         </p>
       </div>
 
-      {/* Target Card */}
-      <section className="relative group max-w-5xl mx-auto">
-        <div className="absolute -inset-1 bg-gradient-to-r from-primary via-yellow-200 to-primary rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
-        <div className="relative bg-card p-12 rounded-3xl border border-primary/20 text-center space-y-8">
-          <TrendingUp className="w-20 h-20 text-primary mx-auto animate-bounce opacity-50" />
-          <h2 className="text-6xl md:text-8xl font-black tracking-tighter gold-gradient">$1M</h2>
-          <p className="text-2xl font-bold uppercase tracking-[0.4em] text-muted-foreground">Company Valuation Target</p>
-          <div className="w-full bg-border h-2 rounded-full overflow-hidden">
+      {/* Valuation Target */}
+      <section className="max-w-4xl mx-auto rounded-3xl border border-primary/25 bg-[#111114] p-10 sm:p-14 text-center space-y-7">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">
+          Primary Capital Milestone
+        </p>
+        <h2 className="font-mono text-5xl sm:text-7xl font-semibold tracking-tight gold-gradient tabular-nums">
+          ${config.valuationTarget || "1,000,000"}
+        </h2>
+        <p className="text-sm uppercase tracking-[0.2em] text-zinc-400">
+          2030 Enterprise Valuation Target
+        </p>
+        <div className="max-w-xl mx-auto space-y-3">
+          <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
-              whileInView={{ width: "15%" }}
+              whileInView={{ width: `${progressPct}%` }}
               viewport={{ once: true }}
-              transition={{ duration: 2, ease: "easeOut" }}
-              className="h-full bg-primary gold-glow"
+              transition={{ duration: 1.4, ease: EASE_OUT_EXPO }}
+              className="h-full bg-primary"
             />
           </div>
-          <p className="text-sm text-primary font-bold uppercase tracking-widest">Phase 1: Foundation (Current)</p>
+          <div className="flex justify-between text-xs text-zinc-400 font-mono tabular-nums">
+            <span>Current Phase: {config.status}</span>
+            <span>{progressPct}% Trajectory</span>
+          </div>
         </div>
       </section>
 
-      {/* Ecosystem Section */}
-      <section className="space-y-16">
-        <div className="text-center space-y-4">
-          <h2 className="text-4xl font-bold">The Elite <span className="gold-text">Ecosystem</span></h2>
-          <p className="max-w-2xl mx-auto text-muted-foreground">
-            ELITE GROUP isn't just one business. It's a network of high-performance 
-            entities designed to support one another.
+      {/* Ecosystem */}
+      <section className="space-y-12">
+        <div className="text-center space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+            Holding Structure
+          </p>
+          <h2 className="font-heading text-3xl md:text-4xl font-semibold">
+            The Elite Ecosystem
+          </h2>
+          <p className="max-w-2xl mx-auto text-sm md:text-base text-zinc-400">
+            Interconnected divisions sharing leadership governance, brand equity, and capital allocation.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
+        <div className="grid md:grid-cols-3 gap-7">
           {[
-            { title: "Elite Academy", desc: "Training the next generation of business leaders.", icon: Trophy },
-            { title: "Digital Forge", desc: "Building high-end software solutions and assets.", icon: Layers },
-            { title: "Opus Investments", desc: "Strategic capital placement for long term wealth.", icon: Zap }
+            {
+              title: "Elite Academy",
+              desc: "Developing executive capability and operational leadership for scaling new verticals.",
+              icon: Trophy,
+            },
+            {
+              title: "Digital Forge",
+              desc: "Engineering proprietary software platforms, automation systems, and digital infrastructure.",
+              icon: Layers,
+            },
+            {
+              title: "Opus Capital",
+              desc: "Strategic capital placement and structured funding across high-conviction enterprises.",
+              icon: Zap,
+            },
           ].map((eco, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="p-10 rounded-2xl premium-card border-none space-y-6 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.55, delay: i * 0.08, ease: EASE_OUT_EXPO }}
+              className="p-8 rounded-2xl surface-card space-y-4"
             >
-              <div className="w-16 h-16 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-center mx-auto">
-                <eco.icon className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="text-2xl font-bold">{eco.title}</h3>
-              <p className="text-muted-foreground font-light leading-relaxed">{eco.desc}</p>
+              <eco.icon className="w-6 h-6 text-primary" />
+              <h3 className="font-heading text-2xl font-semibold text-zinc-100">{eco.title}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">{eco.desc}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Global Expansion Map Placeholder */}
-      <section className="relative overflow-hidden bg-black/40 border border-primary/20 rounded-3xl p-12 lg:p-24 text-center">
-        <div className="absolute inset-0 z-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1589519160732-57fc498494f8?q=80&w=2000')] bg-cover bg-center" />
-        <div className="relative z-10 space-y-8">
-          <h2 className="text-4xl md:text-6xl font-bold gold-gradient italic">GLOBAL EXPANSION</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            From regional operations to a worldwide footprint. 2030 marks the year 
-            of total borderless synergy.
+      {/* Global Corridors */}
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#111114] min-h-[340px] flex items-center">
+        <img
+          src={LOCAL_ASSETS.globalNetwork}
+          alt="Global expansion corridors"
+          className="absolute inset-0 w-full h-full object-cover opacity-35"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#09090b] via-[#09090b]/85 to-[#09090b]/60" />
+        <div className="relative z-10 p-10 sm:p-16 max-w-3xl space-y-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+            International Presence
           </p>
-          <div className="flex flex-wrap justify-center gap-8 pt-6">
-            {["Dhaka", "Dubai", "New York", "London", "Singapore"].map((city) => (
-              <span key={city} className="text-lg font-mono tracking-widest text-primary/80 border-b border-primary/20 px-2 py-1">
-                {city.toUpperCase()}
-              </span>
-            ))}
-          </div>
+          <h2 className="font-heading text-3xl md:text-5xl font-semibold text-white">
+            Borderless Commercial Corridors
+          </h2>
+          <p className="text-base text-zinc-300 leading-relaxed">
+            Positioning ELITE GROUP ventures across strategic global commercial hubs through 2030.
+          </p>
+          <p className="text-xs font-mono tracking-[0.22em] text-primary uppercase">
+            Dhaka · Dubai · New York · London · Singapore
+          </p>
         </div>
       </section>
     </div>

@@ -2,7 +2,7 @@
   "entities": {
     "Brand": {
       "title": "Brand",
-      "description": "Core brands of Elite Group",
+      "description": "Core brands and ventures of Elite Group",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
@@ -16,7 +16,7 @@
     },
     "TeamMember": {
       "title": "Team Member",
-      "description": "Leadership team of Elite Group",
+      "description": "Leadership and team member profiles of Elite Group",
       "type": "object",
       "properties": {
         "name": { "type": "string" },
@@ -25,13 +25,16 @@
         "image": { "type": "string" },
         "badges": { "type": "array", "items": { "type": "string" } },
         "initials": { "type": "string" },
+        "email": { "type": "string" },
+        "linkedin": { "type": "string" },
+        "twitter": { "type": "string" },
         "order": { "type": "number" }
       },
       "required": ["name", "role", "image", "order"]
     },
     "GalleryItem": {
       "title": "Gallery Item",
-      "description": "Visual highlights and achievements",
+      "description": "Corporate archive photography and highlights",
       "type": "object",
       "properties": {
         "url": { "type": "string" },
@@ -43,7 +46,7 @@
     },
     "TimelineEvent": {
       "title": "Timeline Event",
-      "description": "Milestones and roadmap events for Elite Group",
+      "description": "Strategic roadmap milestones for Elite Group",
       "type": "object",
       "properties": {
         "year": { "type": "string" },
@@ -57,7 +60,7 @@
     },
     "Milestone": {
       "title": "Milestone",
-      "description": "Key milestone items for dashboard tracking",
+      "description": "Operational milestone items for progress tracking",
       "type": "object",
       "properties": {
         "title": { "type": "string" },
@@ -70,31 +73,44 @@
     },
     "GrowthPoint": {
       "title": "Growth Point",
-      "description": "Financial and phase progression tracking",
+      "description": "Monthly revenue and growth trajectory entries",
       "type": "object",
       "properties": {
         "month": { "type": "string" },
         "amount": { "type": "number" },
-        "phase": { "type": "string" },
-        "target": { "type": "number" },
-        "current": { "type": "number" }
+        "order": { "type": "number" }
       },
       "required": ["month", "amount"]
     },
     "SiteConfig": {
       "title": "Site Config",
-      "description": "Global configuration and live stats",
+      "description": "Global company identity, hero content, MD profile, metrics, and contact details",
       "type": "object",
       "properties": {
-        "title": { "type": "string" },
+        "companyName": { "type": "string" },
+        "tagline": { "type": "string" },
+        "heroEyebrow": { "type": "string" },
+        "heroTitle": { "type": "string" },
+        "heroSubtitle": { "type": "string" },
         "mission": { "type": "string" },
         "vision": { "type": "string" },
+        "mdName": { "type": "string" },
+        "mdRole": { "type": "string" },
+        "mdImage": { "type": "string" },
+        "mdQuote": { "type": "string" },
+        "mdBannerQuote": { "type": "string" },
         "totalRevenue": { "type": "string" },
         "netWorth": { "type": "string" },
         "multiplier": { "type": "string" },
-        "status": { "type": "string" }
+        "status": { "type": "string" },
+        "activeUnits": { "type": "string" },
+        "valuationTarget": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "linkedinUrl": { "type": "string" },
+        "twitterUrl": { "type": "string" },
+        "instagramUrl": { "type": "string" }
       },
-      "required": ["title", "mission"]
+      "required": ["companyName", "mission"]
     }
   },
   "firestore": {

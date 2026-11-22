@@ -1,20 +1,25 @@
 import { motion } from "framer-motion";
-import { ArrowRight, TrendingUp, Target, ShieldCheck, Gem, Quote, Users, Bot } from "lucide-react";
+import { ArrowRight, TrendingUp, Target, ShieldCheck, Gem, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getBrands, getTeam } from "../services/firebase";
 import { Logo } from "@/components/ui/Logo";
+import { useSiteConfig } from "../context/SiteContext";
+import { DEFAULT_BRANDS, DEFAULT_TEAM, LOCAL_ASSETS } from "../lib/defaults";
+
+const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 export default function Home() {
-  const [brands, setBrands] = useState<any[]>([]);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const { config } = useSiteConfig();
+  const [brands, setBrands] = useState<any[]>(DEFAULT_BRANDS);
+  const [teamMembers, setTeamMembers] = useState<any[]>(DEFAULT_TEAM);
 
   useEffect(() => {
-    getBrands().then(data => {
+    getBrands().then((data) => {
       if (data && data.length > 0) setBrands(data);
     });
-    getTeam().then(data => {
+    getTeam().then((data) => {
       if (data && data.length > 0) setTeamMembers(data.slice(0, 3));
     });
   }, []);
@@ -24,224 +29,230 @@ export default function Home() {
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2
-      }
-    }
+        staggerChildren: 0.12,
+        ease: EASE_OUT_EXPO,
+      },
+    },
   };
 
   const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
+    hidden: { opacity: 0, y: 18 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.65, ease: EASE_OUT_EXPO },
+    },
   };
 
   return (
-    <div className="space-y-32 pb-20">
+    <div className="space-y-24 md:space-y-32 pb-16">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-        {/* Animated Luxury Background Layer */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-black via-[#1a1a1a] to-[#2d240d] animate-gradient-shimmer" />
-          <div className="absolute inset-0 luxury-mesh opacity-60" />
-          
-          {/* Drifting Light Orbs */}
-          <motion.div 
-            animate={{ 
-              x: [0, 50, -50, 0],
-              y: [0, -30, 30, 0],
+      <section className="relative min-h-[78vh] flex items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-[#0b0b0e] px-6 py-20">
+        {/* Subtle Animated Architectural Backdrop */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div
+            className="absolute -inset-1/4 animate-ambient-pan"
+            style={{
+              background:
+                "radial-gradient(circle at 30% 30%, rgba(212, 175, 55, 0.16) 0%, transparent 45%), radial-gradient(circle at 75% 70%, rgba(212, 175, 55, 0.10) 0%, transparent 50%)",
             }}
-            transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-1/4 -left-20 w-96 h-96 bg-primary/10 rounded-full blur-[120px]" 
           />
-          <motion.div 
-            animate={{ 
-              x: [0, -40, 40, 0],
-              y: [0, 60, -60, 0],
+          <div
+            className="absolute inset-0 opacity-[0.06]"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.4) 1px, transparent 1px)",
+              backgroundSize: "72px 72px",
             }}
-            transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute bottom-1/4 -right-20 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[140px]" 
           />
-          
-          {/* Grid Overlay for structure */}
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] mix-blend-overlay" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-transparent to-[#09090b]/40" />
         </div>
 
         <motion.div
           variants={container}
           initial="hidden"
           animate="show"
-          className="relative z-10 text-center space-y-8 max-w-4xl"
+          className="relative z-10 text-center space-y-7 max-w-3xl mx-auto"
         >
-          <motion.div variants={item} className="mb-4">
-            <Logo size="lg" className="mx-auto mb-6" />
+          <motion.div variants={item} className="flex justify-center">
+            <Logo size="lg" />
           </motion.div>
 
-          <motion.div variants={item} className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs uppercase tracking-widest mb-4">
-            <Gem className="w-3 h-3" />
-            <span>ELITE TEAM 07 • The $1M Mission</span>
-          </motion.div>
-          
-          <motion.h1 variants={item} className="text-6xl md:text-8xl font-black tracking-tighter leading-tight">
-            BUILDING <br />
-            <span className="gold-gradient">EXCELLENCE</span>
-          </motion.h1>
-
-          <motion.p variants={item} className="text-xl md:text-2xl text-muted-foreground font-light max-w-2xl mx-auto leading-relaxed">
-            From <span className="text-primary font-medium">$1K to $1M</span>. 
-            We are building a legacy of financial freedom, global expansion, and elite businesses.
+          <motion.p
+            variants={item}
+            className="text-xs font-semibold uppercase tracking-[0.28em] text-primary"
+          >
+            {config.heroEyebrow}
           </motion.p>
 
-          <motion.div variants={item} className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+          <motion.h1
+            variants={item}
+            className="font-heading text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tight leading-[1.08]"
+          >
+            <span className="gold-gradient">{config.heroTitle}</span>
+          </motion.h1>
+
+          <motion.p
+            variants={item}
+            className="text-lg md:text-xl text-zinc-400 font-normal max-w-2xl mx-auto leading-relaxed"
+          >
+            {config.heroSubtitle}
+          </motion.p>
+
+          <motion.div
+            variants={item}
+            className="flex flex-wrap items-center justify-center gap-4 pt-3"
+          >
             <Link to="/dashboard">
-              <Button size="lg" className="h-14 px-8 text-lg gold-glow hover:scale-105 transition-transform">
+              <Button
+                size="lg"
+                className="h-12 px-8 text-sm font-semibold gold-glow hover:scale-[1.02] transition-transform"
+              >
                 View Progress Dashboard
-                <TrendingUp className="ml-2 w-5 h-5" />
+                <TrendingUp className="ml-2 w-4 h-4" />
               </Button>
             </Link>
-            <div className="relative group">
-              <div className="absolute -inset-0.5 bg-primary/30 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
-              <Button 
-                onClick={() => {
-                  window.dispatchEvent(new CustomEvent('open-ai-chat'));
-                }}
-                size="lg" 
-                variant="outline" 
-                className="relative h-14 px-8 text-lg border-primary/20 hover:bg-primary/5 bg-background"
+            <Link to="/vision">
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-12 px-7 text-sm font-medium border-white/15 hover:border-primary/40 hover:bg-primary/5"
               >
-                Consult AI Strategist
-                <Bot className="ml-2 w-5 h-5" />
+                Vision 2030
+                <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
-            </div>
+            </Link>
           </motion.div>
         </motion.div>
       </section>
 
-      {/* Intro Section */}
-      <section className="grid lg:grid-cols-2 gap-16 items-center">
+      {/* Founder & Core Principles Section */}
+      <section className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
         <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          className="relative group"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.7, ease: EASE_OUT_EXPO }}
+          className="lg:col-span-5 relative group"
         >
-          <div className="absolute -inset-4 bg-primary/10 rounded-2xl blur-2xl group-hover:bg-primary/20 transition-all duration-500" />
-          <img
-            src="https://lh3.googleusercontent.com/d/17EAsoYWww3QDowMyBdis6uBaVAWnBEaG"
-            alt="MD Joy Hossen"
-            className="relative rounded-2xl object-cover aspect-[4/5] gold-border gold-glow w-full"
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute bottom-8 left-8 right-8 p-6 premium-card rounded-xl">
-            <p className="text-primary font-heading italic text-xl mb-2">"Vision without execution is just hallucination."</p>
-            <p className="font-bold text-lg">MD Joy Hossen</p>
-            <p className="text-muted-foreground text-sm uppercase tracking-widest">Founder & MD</p>
+          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#111114]">
+            <img
+              src={config.mdImage || DEFAULT_TEAM[0].image}
+              alt={config.mdName}
+              className="w-full aspect-[4/5] object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.strategyRoom;
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-7 space-y-2">
+              <p className="font-heading italic text-lg text-zinc-200 leading-snug">
+                "{config.mdQuote}"
+              </p>
+              <div className="pt-2 border-t border-white/15 flex items-baseline justify-between gap-4">
+                <span className="font-semibold text-base text-white">{config.mdName}</span>
+                <span className="text-xs text-primary font-medium">{config.mdRole}</span>
+              </div>
+            </div>
           </div>
         </motion.div>
 
-        <div className="space-y-8">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.7, delay: 0.1, ease: EASE_OUT_EXPO }}
+          className="lg:col-span-7 space-y-8"
+        >
           <div className="space-y-4">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-              A Company Built on <br />
-              <span className="gold-text italic">Pure Ambition</span>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+              Corporate Philosophy
+            </p>
+            <h2 className="font-heading text-3xl md:text-5xl font-semibold tracking-tight leading-tight">
+              An institution built on disciplined execution
             </h2>
-            <div className="h-1.5 w-24 bg-primary rounded-full shadow-[0_0_10px_rgba(212,175,55,0.5)]" />
+            <p className="text-base md:text-lg text-zinc-400 leading-relaxed max-w-2xl">
+              {config.mission}
+            </p>
           </div>
 
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            ELITE GROUP was founded with a singular purpose: to prove that excellence can be engineered. 
-            We started with a vision to clear family debts and have since evolved into a mission 
-            to create a global ecosystem of thriving businesses.
-          </p>
-
-          <div className="grid sm:grid-cols-2 gap-6">
+          <div className="grid sm:grid-cols-2 gap-5">
             {[
-              { icon: Target, title: "Precision", desc: "Every move is calculated for maximum growth." },
-              { icon: ShieldCheck, title: "Integrity", desc: "Built on a foundation of trust and hard work." },
-              { icon: TrendingUp, title: "Scalability", desc: "Designed to expand globally by 2030." },
-              { icon: Gem, title: "Excellence", desc: "Only the elite standard is acceptable." }
+              { icon: Target, title: "Precision", desc: "Every capital allocation and strategic initiative is measured for durable compounding." },
+              { icon: ShieldCheck, title: "Governance", desc: "Built on structural accountability, transparency, and long-term trust." },
+              { icon: TrendingUp, title: "Scalability", desc: "Operating frameworks architected for cross-border expansion through 2030." },
+              { icon: Gem, title: "Excellence", desc: "Uncompromising standards across product craft, talent, and execution." },
             ].map((feature, i) => (
-              <div key={i} className="p-4 rounded-xl bg-card border border-border group hover:border-primary/30 transition-colors">
-                <feature.icon className="w-8 h-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
-                <h3 className="font-bold text-lg mb-1">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground">{feature.desc}</p>
+              <div
+                key={i}
+                className="p-6 rounded-xl surface-card space-y-2.5"
+              >
+                <feature.icon className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold text-base text-zinc-100">{feature.title}</h3>
+                <p className="text-sm text-zinc-400 leading-relaxed">{feature.desc}</p>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* Core Brands Section */}
-      <section className="space-y-16">
-        <div className="text-center space-y-4">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs uppercase tracking-widest"
-          >
-            <TrendingUp className="w-3 h-3" />
-            <span>Market Dominance</span>
-          </motion.div>
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-            CORE <span className="gold-text">BRANDS</span>
-          </h2>
-          <p className="max-w-2xl mx-auto text-muted-foreground font-light">
-            Diverse assets, unified by excellence. ELITE GROUP operates at the intersection 
-            of lifestyle, finance, and technology.
+      {/* Core Ventures / Brands Section */}
+      <section className="space-y-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+              Portfolio
+            </p>
+            <h2 className="font-heading text-3xl md:text-5xl font-semibold tracking-tight">
+              Core Ventures
+            </h2>
+          </div>
+          <p className="max-w-md text-sm md:text-base text-zinc-400 leading-relaxed">
+            Diverse operating divisions across consumer luxury, structured finance, and bespoke apparel.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {(brands.length > 0 ? brands : [
-            {
-              name: "Elite Soft Drink",
-              tagline: "Ultra-Premium Hydration",
-              image: "https://lh3.googleusercontent.com/d/1zd5W3ODQ-8wdU8zn_ABNn8CR7a-6BTgz",
-              link: "/vision",
-              desc: "Engineered for elite performance and cognitive clarity."
-            },
-            {
-              name: "Elite Funder",
-              tagline: "Capitalized Scaling",
-              image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=1000",
-              link: "/dashboard",
-              desc: "Revolutionizing business funding and wealth generation."
-            },
-            {
-              name: "Elite Fashion",
-              tagline: "Bespoke Luxury",
-              image: "https://lh3.googleusercontent.com/d/1J1UaPpZ95un_go-wFGAQ8sMiUMUsdIDZ",
-              link: "/gallery",
-              desc: "High-end artisanal apparel for the discerning visionary."
-            }
-          ]).map((brand, i) => (
+        <div className="grid md:grid-cols-3 gap-7">
+          {brands.map((brand, i) => (
             <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 30 }}
+              key={brand.id || i}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              viewport={{ once: true }}
-              className="group relative overflow-hidden rounded-2xl border border-primary/10 hover:border-primary/40 transition-all duration-500 bg-card"
+              transition={{ duration: 0.55, delay: i * 0.08, ease: EASE_OUT_EXPO }}
+              viewport={{ once: true, amount: 0.15 }}
+              className="group rounded-2xl surface-card overflow-hidden flex flex-col"
             >
-              <div className="aspect-video relative overflow-hidden">
-                <img 
-                  src={brand.image} 
+              <div className="aspect-[16/10] relative overflow-hidden bg-zinc-900">
+                <img
+                  src={brand.image}
                   alt={brand.name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale-[0.3] group-hover:grayscale-0"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.corporateHq;
+                  }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-60" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
               </div>
-              <div className="p-8 space-y-4">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">{brand.tagline}</p>
-                  <h3 className="text-2xl font-bold tracking-tight">{brand.name}</h3>
+              <div className="p-7 flex-1 flex flex-col justify-between space-y-5">
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-primary tracking-wide">
+                    {brand.tagline}
+                  </p>
+                  <h3 className="font-heading text-2xl font-semibold tracking-tight text-zinc-100">
+                    {brand.name}
+                  </h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed pt-1">
+                    {brand.desc}
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground font-light leading-relaxed">
-                  {brand.desc}
-                </p>
-                <Link to={brand.link && brand.link !== "#" ? brand.link : "/vision"} className="inline-flex items-center text-primary text-xs font-bold uppercase tracking-widest group/link">
-                  Explore Brand
-                  <ArrowRight className="ml-2 w-3 h-3 transition-transform group-hover/link:translate-x-1" />
+                <Link
+                  to={brand.link && brand.link !== "#" ? brand.link : "/vision"}
+                  className="inline-flex items-center text-primary text-xs font-semibold uppercase tracking-widest group/link pt-2"
+                >
+                  Explore Venture
+                  <ArrowRight className="ml-2 w-3.5 h-3.5 transition-transform group-hover/link:translate-x-1" />
                 </Link>
               </div>
             </motion.div>
@@ -249,124 +260,105 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Team Teaser */}
-      <section className="space-y-16">
-        <div className="flex flex-col md:flex-row justify-between items-end gap-6">
-          <div className="space-y-4">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs uppercase tracking-widest"
-            >
-              <Users className="w-3 h-3" />
-              <span>Elite Talent</span>
-            </motion.div>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-              MEET THE <span className="gold-text">LEADERSHIP</span>
+      {/* Executive Leadership Teaser */}
+      <section className="space-y-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+              Executive Board
+            </p>
+            <h2 className="font-heading text-3xl md:text-5xl font-semibold tracking-tight">
+              Leadership Team
             </h2>
           </div>
           <Link to="/team">
-            <Button variant="outline" className="gold-border group transition-all hover:bg-primary/5">
-              View All Management
-              <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+            <Button variant="outline" className="border-white/15 hover:border-primary/40 hover:bg-primary/5 text-sm">
+              View Full Leadership
+              <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           </Link>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {(teamMembers.length > 0 ? teamMembers : [
-            { name: "MD Joy Hossen", role: "MD & Founder", image: "https://lh3.googleusercontent.com/d/17EAsoYWww3QDowMyBdis6uBaVAWnBEaG" },
-            { name: "MD Tarif Hossain", role: "Co-Founder", image: "https://lh3.googleusercontent.com/d/11wUM19yxC7UrVODSItly9XdoMhRKR46u" },
-            { name: "MD ASIF HOSSAIN", role: "Tech Director", image: "https://lh3.googleusercontent.com/d/1Ja11gJERdSAHC9SbTSZKe_5MMPoqvKKg" }
-          ]).map((member, i) => (
+        <div className="grid md:grid-cols-3 gap-7">
+          {teamMembers.map((member, i) => (
             <motion.div
-              key={i}
+              key={member.id || i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              viewport={{ once: true }}
-              className="relative aspect-[4/5] overflow-hidden rounded-2xl group"
+              transition={{ duration: 0.55, delay: i * 0.08, ease: EASE_OUT_EXPO }}
+              viewport={{ once: true, amount: 0.15 }}
+              className="group relative aspect-[4/5] overflow-hidden rounded-2xl border border-white/10 bg-zinc-900"
             >
-              <img src={member.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={member.name} referrerPolicy="no-referrer" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent flex flex-col justify-end p-8">
-                <p className="text-primary text-[10px] uppercase tracking-widest font-bold mb-1">{member.role}</p>
-                <h3 className="text-xl font-bold">{member.name}</h3>
+              <img
+                src={member.image}
+                alt={member.name}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.strategyRoom;
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-7">
+                <p className="text-primary text-xs font-medium tracking-wide mb-1">
+                  {member.role}
+                </p>
+                <h3 className="font-heading text-2xl font-semibold text-white">
+                  {member.name}
+                </h3>
               </div>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Progress Teaser - Simplified */}
-      <section className="space-y-16 py-20 border-y border-primary/10">
-        <div className="text-center space-y-4">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-            COMPANY <span className="gold-text">PROGRESS</span>
-          </h2>
-          <p className="max-w-2xl mx-auto text-muted-foreground font-light">
-            Tracking our growth toward the 2030 vision. Transparent metrics for a performance-driven organization.
-          </p>
+      {/* Performance Snapshot */}
+      <section className="rounded-3xl border border-white/10 bg-[#111114] p-8 sm:p-12 lg:p-16 space-y-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+              Financial Trajectory
+            </p>
+            <h2 className="font-heading text-3xl md:text-4xl font-semibold tracking-tight">
+              Growth & Capital Metrics
+            </h2>
+          </div>
+          <Link to="/timeline">
+            <Button variant="outline" className="border-primary/35 text-primary hover:bg-primary/10 text-sm">
+              View Strategic Roadmap
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: "Assets Under Mgmt", value: "$12,450", prefix: "", suffix: "+" },
-            { label: "Elite Growth", value: "4.2", prefix: "x", suffix: "" },
-            { label: "Operating Brands", value: brands.length || "3", prefix: "", suffix: "" },
-            { label: "Planned Units", value: "15", prefix: "", suffix: "" }
+            { label: "Assets Under Mgmt", value: `$${config.netWorth}+` },
+            { label: "Growth Multiplier", value: `x${config.multiplier}` },
+            { label: "Operating Brands", value: `${brands.length}` },
+            { label: "Planned Units", value: config.activeUnits || "15" },
           ].map((stat, i) => (
-            <div key={i} className="text-center p-8 premium-card rounded-2xl">
-              <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground mb-4">{stat.label}</p>
-              <h3 className="text-3xl md:text-4xl font-black gold-gradient">
-                {stat.prefix}{stat.value}{stat.suffix}
-              </h3>
+            <div key={i} className="p-6 rounded-xl bg-black/40 border border-white/10 space-y-2">
+              <p className="text-xs text-zinc-400 font-medium">{stat.label}</p>
+              <p className="font-mono text-3xl md:text-4xl font-semibold gold-gradient tabular-nums">
+                {stat.value}
+              </p>
             </div>
           ))}
         </div>
-
-        <div className="text-center">
-          <Link to="/timeline">
-            <Button size="lg" className="gold-glow">
-              View Detailed Roadmap
-              <TrendingUp className="ml-2 w-5 h-5" />
-            </Button>
-          </Link>
-        </div>
       </section>
 
-      {/* Admin Transparency Footer Section */}
-      <section className="py-20 text-center">
-        <div className="max-w-xl mx-auto space-y-6">
-          <ShieldCheck className="w-12 h-12 text-primary mx-auto opacity-30" />
-          <h3 className="text-2xl font-bold">Protocol Transparency</h3>
-          <p className="text-muted-foreground">
-            ELITE GROUP maintains full administrative transparency for stakeholders. 
-            MD clearance required for command terminal access.
-          </p>
-          <Link to="/admin">
-            <Button variant="ghost" className="text-primary font-bold tracking-widest uppercase text-xs hover:bg-primary/10">
-              Access Command Center
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* CEO Message / Quote */}
-      <section className="text-center py-20 relative overflow-hidden rounded-3xl bg-primary/5 border border-primary/10">
-        <div className="absolute top-0 left-0 p-12 opacity-10">
-          <Quote className="w-32 h-32 text-primary" />
-        </div>
-        <div className="relative z-10 max-w-3xl mx-auto px-6">
-          <Quote className="w-12 h-12 text-primary mx-auto mb-8 opacity-50" />
-          <h2 className="text-3xl md:text-4xl font-heading italic leading-snug mb-8">
-            "We are not just building a company; we are building an ecosystem where 
-            financial freedom is the baseline, and global impact is the goal."
-          </h2>
-          <div className="flex flex-col items-center">
-            <div className="w-16 h-px bg-primary/30 mb-4" />
-            <p className="text-xl font-bold tracking-widest gold-text">JOY HOSSEN</p>
-            <p className="text-sm text-muted-foreground uppercase tracking-widest">Message from the MD</p>
+      {/* Executive Statement */}
+      <section className="text-center py-14 px-6 rounded-3xl border border-primary/20 bg-gradient-to-b from-primary/[0.06] to-transparent">
+        <div className="max-w-3xl mx-auto space-y-6">
+          <Quote className="w-8 h-8 text-primary/60 mx-auto" />
+          <blockquote className="font-heading italic text-2xl md:text-3xl leading-relaxed text-zinc-100">
+            "{config.mdBannerQuote}"
+          </blockquote>
+          <div className="pt-2 space-y-1">
+            <p className="text-sm font-semibold tracking-widest uppercase gold-text">
+              {config.mdName}
+            </p>
+            <p className="text-xs text-zinc-400">{config.mdRole}</p>
           </div>
         </div>
       </section>

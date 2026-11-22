@@ -51,7 +51,7 @@ export const deleteTeamMember = async (memberId: string) => {
   }
 };
 
-// Progress Services
+// Milestone Services
 export const getMilestones = async () => {
   try {
     const q = query(collection(db, 'milestones'), orderBy('order', 'asc'));
@@ -80,13 +80,35 @@ export const deleteMilestone = async (milestoneId: string) => {
   }
 };
 
+// Growth Services
 export const getGrowthData = async () => {
   try {
     const querySnapshot = await getDocs(collection(db, 'growth'));
-    return querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    const items: Array<Record<string, any>> = querySnapshot.docs.map(d => ({
+      id: d.id,
+      ...(d.data() as Record<string, any>),
+    }));
+    return items.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
   } catch (error) {
     console.warn("Unable to fetch growth data from Firestore:", error);
     return [];
+  }
+};
+
+export const saveGrowthPoint = async (growthId: string, data: Record<string, unknown>) => {
+  try {
+    const docRef = doc(db, 'growth', growthId);
+    await setDoc(docRef, data, { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, 'write', 'growth/' + growthId);
+  }
+};
+
+export const deleteGrowthPoint = async (growthId: string) => {
+  try {
+    await deleteDoc(doc(db, 'growth', growthId));
+  } catch (error) {
+    handleFirestoreError(error, 'delete', 'growth/' + growthId);
   }
 };
 
@@ -128,6 +150,23 @@ export const getGallery = async () => {
   } catch (error) {
     console.warn("Unable to fetch gallery from Firestore:", error);
     return [];
+  }
+};
+
+export const saveGalleryItem = async (itemId: string, data: Record<string, unknown>) => {
+  try {
+    const docRef = doc(db, 'gallery', itemId);
+    await setDoc(docRef, data, { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, 'write', 'gallery/' + itemId);
+  }
+};
+
+export const deleteGalleryItem = async (itemId: string) => {
+  try {
+    await deleteDoc(doc(db, 'gallery', itemId));
+  } catch (error) {
+    handleFirestoreError(error, 'delete', 'gallery/' + itemId);
   }
 };
 

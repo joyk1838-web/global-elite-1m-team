@@ -2,107 +2,102 @@ import { motion } from "framer-motion";
 import { Milestone, Flag, Rocket, Shield, Crown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getTimeline } from "../services/firebase";
+import { DEFAULT_TIMELINE } from "../lib/defaults";
+
+const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const iconMap: Record<string, any> = {
   Rocket,
   Shield,
   Milestone,
   Flag,
-  Crown
+  Crown,
 };
 
 export default function Timeline() {
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>(DEFAULT_TIMELINE);
 
   useEffect(() => {
-    getTimeline().then(data => {
+    getTimeline().then((data) => {
       if (data && data.length > 0) setEvents(data);
     });
   }, []);
 
-  const displayEvents = events.length > 0 ? events : [
-    { year: "2025", title: "THE IGNITION", desc: "ELITE GROUP officially started with a mission to change the lineage's financial story.", icon: "Rocket", status: "completed" },
-    { year: "2026", title: "SYSTEMS CO-PILOT", desc: "Focus on building robust business systems and automation workflows.", icon: "Shield", status: "current" },
-    { year: "2027", title: "SCALING SYNERGY", desc: "Expanding operations across multiple sectors and increasing team capacity.", icon: "Milestone", status: "upcoming" },
-    { year: "2028", title: "GLOBAL FOOTPRINT", desc: "Strategic international presence and brand dominance.", icon: "Flag", status: "upcoming" },
-    { year: "2029", title: "MILLION DOLLAR ARCH", desc: "The final push towards the seven-figure company target.", icon: "Crown", status: "upcoming" }
-  ];
-
   return (
-    <div className="space-y-20 pb-20">
-      <div className="text-center space-y-6 max-w-3xl mx-auto">
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight gold-gradient">JOURNEY TIMELINE</h1>
-        <p className="text-xl text-muted-foreground font-light">
-          The sequence of excellence. Mapping our past achievements and defining our future milestones.
+    <div className="space-y-16 pb-16">
+      <div className="text-center space-y-4 max-w-3xl mx-auto">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+          Strategic Chronology
+        </p>
+        <h1 className="font-heading text-4xl md:text-6xl font-semibold tracking-tight gold-gradient">
+          Corporate Roadmap
+        </h1>
+        <p className="text-base md:text-lg text-zinc-400 leading-relaxed">
+          Mapping our foundational execution and multi-year trajectory toward global market leadership.
         </p>
       </div>
 
-      <div className="relative max-w-5xl mx-auto px-4">
-        {/* Vertical Line */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-px bg-border md:block hidden" />
-        
-        <div className="space-y-12 md:space-y-0">
-          {displayEvents.map((event, i) => {
+      <div className="relative max-w-4xl mx-auto">
+        <div className="absolute left-6 md:left-1/2 md:-translate-x-px top-0 bottom-0 w-px bg-white/10" />
+
+        <div className="space-y-10">
+          {events.map((event, i) => {
             const Icon = iconMap[event.icon] || Milestone;
+            const isActive = event.status === "current";
+            const isCompleted = event.status === "completed";
+
             return (
-              <div key={i} className={`flex flex-col md:flex-row items-center gap-8 md:gap-0 ${i % 2 === 0 ? "md:flex-row-reverse" : ""}`}>
-                {/* Content Card */}
-                <motion.div 
-                  initial={{ opacity: 0, x: i % 2 === 0 ? 100 : -100 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  className="w-full md:w-[45%] group"
+              <div
+                key={event.id || i}
+                className={`relative flex flex-col md:flex-row items-start md:items-center gap-6 ${
+                  i % 2 === 0 ? "md:flex-row-reverse" : ""
+                }`}
+              >
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.5, delay: i * 0.06, ease: EASE_OUT_EXPO }}
+                  className="pl-16 md:pl-0 w-full md:w-[45%]"
                 >
-                  <div className={`p-8 rounded-3xl premium-card border-none space-y-4 relative overflow-hidden ${
-                    event.status === 'current' ? "gold-border gold-glow" : ""
-                  }`}>
-                    {event.status === 'current' && (
-                      <div className="absolute top-0 right-0 p-2">
-                        <span className="bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full animate-pulse">
-                          CURRENT PHASE
-                        </span>
-                      </div>
-                    )}
-                    <Icon className={`w-10 h-10 ${event.status === 'completed' || event.status === 'current' ? "text-primary" : "text-muted-foreground"}`} />
-                    <h3 className="text-2xl font-bold font-heading tracking-tight">{event.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed italic">
+                  <div
+                    className={`p-7 rounded-2xl surface-card space-y-3 ${
+                      isActive ? "border-primary/50" : ""
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-mono font-semibold text-primary">{event.year}</span>
+                      <span className="capitalize text-zinc-400 font-medium">
+                        {isActive ? "Current Phase" : event.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-5 h-5 ${isActive || isCompleted ? "text-primary" : "text-zinc-500"}`} />
+                      <h3 className="font-heading text-2xl font-semibold text-zinc-100">
+                        {event.title}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-zinc-400 leading-relaxed">
                       {event.desc}
                     </p>
-                    <div className="flex justify-between items-center pt-4 opacity-50">
-                      <span className="text-5xl font-black font-heading gold-text opacity-20">{event.year}</span>
-                      <Milestone className="w-6 h-6" />
-                    </div>
                   </div>
                 </motion.div>
 
-                {/* Center Dot */}
-                <div className="hidden md:flex relative z-10 w-[10%] justify-center">
-                  <div className={`w-8 h-8 rounded-full border-4 flex items-center justify-center bg-background ${
-                    event.status === 'completed' || event.status === 'current' ? "border-primary" : "border-border"
-                  }`}>
-                    <div className={`w-2 h-2 rounded-full ${
-                      event.status === 'completed' || event.status === 'current' ? "bg-primary" : "bg-border"
-                    }`} />
-                  </div>
+                {/* Timeline Node */}
+                <div className="absolute left-6 md:static md:w-[10%] -translate-x-1/2 md:translate-x-0 flex justify-center z-10 top-7">
+                  <div
+                    className={`w-4 h-4 rounded-full border-2 bg-[#09090b] ${
+                      isActive || isCompleted ? "border-primary bg-primary/30" : "border-zinc-700"
+                    }`}
+                  />
                 </div>
 
-                {/* Spacer for empty side */}
                 <div className="hidden md:block md:w-[45%]" />
               </div>
             );
           })}
         </div>
       </div>
-
-      {/* Motivational Footer */}
-      <section className="text-center space-y-8 bg-black/40 p-12 rounded-3xl gold-border gold-glow max-w-4xl mx-auto">
-        <h2 className="text-3xl font-bold italic">"The best way to predict the future is to create it."</h2>
-        <div className="flex justify-center items-center gap-4">
-          <div className="h-px w-12 bg-primary/30" />
-          <p className="font-mono text-primary tracking-widest uppercase">ELITE GROUP DOCTRINE</p>
-          <div className="h-px w-12 bg-primary/30" />
-        </div>
-      </section>
     </div>
   );
 }

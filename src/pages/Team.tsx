@@ -1,117 +1,116 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Github, Linkedin, Twitter, Mail, Plus } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Linkedin, Twitter, Mail } from "lucide-react";
 import { getTeam } from "../services/firebase";
+import { DEFAULT_TEAM, LOCAL_ASSETS } from "../lib/defaults";
+
+const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 export default function Team() {
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<any[]>(DEFAULT_TEAM);
 
   useEffect(() => {
-    getTeam().then(data => {
+    getTeam().then((data) => {
       if (data && data.length > 0) setTeamMembers(data);
     });
   }, []);
 
-  const displayTeam = teamMembers.length > 0 ? teamMembers : [
-    {
-      name: "MD Joy Hossen",
-      role: "Founder & Managing Director",
-      bio: "Visionary leader with a passion for building scalable elite business ecosystems.",
-      image: "https://lh3.googleusercontent.com/d/17EAsoYWww3QDowMyBdis6uBaVAWnBEaG",
-      badges: ["Founder", "Strategist", "Elite"],
-      initials: "JH"
-    },
-    {
-      name: "MD Tarif Hossain",
-      role: "Co-Founder & Operations Lead",
-      bio: "Master of systems and execution, ensuring every mission objective is met with precision.",
-      image: "https://lh3.googleusercontent.com/d/11wUM19yxC7UrVODSItly9XdoMhRKR46u",
-      badges: ["Co-Founder", "Operations"],
-      initials: "TH"
-    },
-    {
-      name: "MD ASIF HOSSAIN",
-      role: "Technology Director",
-      bio: "Pioneering the digital frontier and building the technical foundations of the ELITE GROUP ecosystem.",
-      image: "https://lh3.googleusercontent.com/d/1Ja11gJERdSAHC9SbTSZKe_5MMPoqvKKg",
-      badges: ["Tech Lead", "Visionary"],
-      initials: "AH"
-    }
-  ];
-
   return (
-    <div className="space-y-20 pb-20">
-      <div className="text-center space-y-6 max-w-3xl mx-auto">
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight gold-gradient">OUR ELITE TEAM</h1>
-        <p className="text-xl text-muted-foreground font-light">
-          Meet the architectural minds behind global expansion and financial freedom. 
-          Mission-driven, excellence-focused.
+    <div className="space-y-16 pb-16">
+      <div className="text-center space-y-4 max-w-3xl mx-auto">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+          Executive Leadership
+        </p>
+        <h1 className="font-heading text-4xl md:text-6xl font-semibold tracking-tight gold-gradient">
+          Leadership & Governance
+        </h1>
+        <p className="text-base md:text-lg text-zinc-400 leading-relaxed">
+          The executive team directing corporate strategy, operational precision, and global expansion.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
-        {displayTeam.map((member, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 30 }}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {teamMembers.map((member, i) => (
+          <motion.article
+            key={member.id || i}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1 }}
-            className="group relative"
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.55, delay: i * 0.08, ease: EASE_OUT_EXPO }}
+            className="group rounded-2xl surface-card overflow-hidden flex flex-col"
           >
-            <div className="absolute -inset-4 bg-primary/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl" />
-            <div className="relative premium-card p-8 rounded-3xl border-none space-y-6 flex flex-col items-center text-center">
-              <div className="relative">
-                <div className="absolute -inset-2 bg-primary/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Avatar className="w-32 h-32 border-2 border-primary/30 gold-glow">
-                  <AvatarImage src={member.image} referrerPolicy="no-referrer" />
-                  <AvatarFallback className="bg-muted text-2xl font-bold">{member.initials || "EL"}</AvatarFallback>
-                </Avatar>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex flex-wrap justify-center gap-2 mb-2">
-                  {member.badges?.map((b: string) => (
-                    <Badge key={b} variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] uppercase font-bold">
-                      {b}
-                    </Badge>
-                  ))}
-                </div>
-                <h3 className="text-2xl font-bold tracking-tight">{member.name}</h3>
-                <p className="text-primary font-medium text-sm border-y border-primary/20 py-2 inline-block px-4">
-                  {member.role?.toUpperCase()}
+            <div className="aspect-[4/4] relative overflow-hidden bg-zinc-900">
+              <img
+                src={member.image}
+                alt={member.name}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.strategyRoom;
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              <div className="absolute bottom-5 left-6 right-6">
+                <p className="text-xs font-medium text-primary tracking-wide">
+                  {member.role}
                 </p>
-                <p className="text-muted-foreground leading-relaxed pt-2">
+                <h2 className="font-heading text-2xl font-semibold text-white mt-0.5">
+                  {member.name}
+                </h2>
+              </div>
+            </div>
+
+            <div className="p-6 flex-1 flex flex-col justify-between space-y-5">
+              <div className="space-y-3">
+                {Array.isArray(member.badges) && member.badges.length > 0 && (
+                  <p className="text-xs text-zinc-400 font-medium">
+                    {member.badges.join(" · ")}
+                  </p>
+                )}
+                <p className="text-sm text-zinc-300 leading-relaxed">
                   {member.bio}
                 </p>
               </div>
 
-              <div className="flex gap-4 pt-4">
-                {[Twitter, Linkedin, Mail].map((Icon, idx) => (
-                  <button key={idx} className="p-2 rounded-full border border-border hover:border-primary hover:text-primary transition-colors">
-                    <Icon className="w-5 h-5" />
-                  </button>
-                ))}
-              </div>
+              {(member.linkedin || member.twitter || member.email) && (
+                <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                  {member.linkedin && (
+                    <a
+                      href={member.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${member.name} LinkedIn`}
+                      className="p-2 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors"
+                    >
+                      <Linkedin className="w-4 h-4" />
+                    </a>
+                  )}
+                  {member.twitter && (
+                    <a
+                      href={member.twitter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${member.name} Twitter`}
+                      className="p-2 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors"
+                    >
+                      <Twitter className="w-4 h-4" />
+                    </a>
+                  )}
+                  {member.email && (
+                    <a
+                      href={`mailto:${member.email}`}
+                      aria-label={`Email ${member.name}`}
+                      className="p-2 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors"
+                    >
+                      <Mail className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
-          </motion.div>
+          </motion.article>
         ))}
       </div>
-
-      {/* Join the Team Section */}
-      <section className="bg-primary shadow-[0_0_50px_rgba(212,175,55,0.2)] rounded-3xl p-12 text-center text-primary-foreground">
-        <h2 className="text-3xl font-black mb-4">WANT TO JOIN THE ELITE?</h2>
-        <p className="text-lg opacity-90 max-w-xl mx-auto mb-8 font-medium">
-          We are always looking for visionary talent to help us scale from $1M and beyond.
-        </p>
-        <Button size="lg" variant="secondary" className="bg-black text-white hover:bg-black/80 h-14 px-10 rounded-full font-bold">
-          Send Your Portfolio
-          <Plus className="ml-2 w-5 h-5" />
-        </Button>
-      </section>
     </div>
   );
 }

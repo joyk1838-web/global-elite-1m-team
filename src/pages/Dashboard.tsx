@@ -1,107 +1,98 @@
 import { motion } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
-import { TrendingUp, Target, CreditCard, Landmark, ArrowUpRight, CheckCircle2, Circle } from "lucide-react";
+import { TrendingUp, Target, CreditCard, Landmark, CheckCircle2, Circle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
-import { getGrowthData, getMilestones, getSiteConfig } from "../services/firebase";
+import { getGrowthData, getMilestones } from "../services/firebase";
+import { useSiteConfig } from "../context/SiteContext";
+import { DEFAULT_GROWTH, DEFAULT_MILESTONES } from "../lib/defaults";
 
-const MOCK_REVENUE = [
-  { name: "Jan", amount: 1200 },
-  { name: "Feb", amount: 2100 },
-  { name: "Mar", amount: 1800 },
-  { name: "Apr", amount: 3500 },
-  { name: "May", amount: 4200 },
-  { name: "Jun", amount: 5800 },
-  { name: "Jul", amount: 7200 },
-];
+const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-const MOCK_GROWTH = [
-  { phase: "Start", target: 1000, current: 1000, color: "#d4af37" },
-  { phase: "Foundation", target: 10000, current: 8500, color: "#d4af37" },
-  { phase: "Growth", target: 100000, current: 0, color: "#a0a0a0" },
-  { phase: "Expansion", target: 500000, current: 0, color: "#a0a0a0" },
-  { phase: "Freedom", target: 1000000, current: 0, color: "#a0a0a0" },
-];
-
-const MOCK_MILESTONES = [
-  { title: "Registration", description: "Official business setup", date: "Jan 2025", completed: true },
-  { title: "First $1K", description: "Reached initial revenue goal", date: "Feb 2025", completed: true },
-  { title: "Core Team", description: "Founding members joined", date: "Mar 2025", completed: true },
-  { title: "$10K Foundation", description: "Stabilizing high revenue flows", date: "Sept 2025", completed: false },
-  { title: "Global Expand", description: "First international office", date: "2027", completed: false },
+const PHASE_BENCHMARKS = [
+  { phase: "Start", target: 1000, current: 1000 },
+  { phase: "Foundation", target: 10000, current: 8500 },
+  { phase: "Growth", target: 100000, current: 0 },
+  { phase: "Expansion", target: 500000, current: 0 },
+  { phase: "Target", target: 1000000, current: 0 },
 ];
 
 export default function Dashboard() {
-  const [revenueData, setRevenueData] = useState<any[]>(MOCK_REVENUE);
-  const [growthPoints, setGrowthPoints] = useState<any[]>(MOCK_GROWTH);
-  const [milestones, setMilestones] = useState<any[]>(MOCK_MILESTONES);
-  const [config, setConfig] = useState<any>(null);
+  const { config } = useSiteConfig();
+  const [revenueData, setRevenueData] = useState<any[]>(
+    DEFAULT_GROWTH.map((g) => ({ name: g.month, amount: g.amount }))
+  );
+  const [milestones, setMilestones] = useState<any[]>(DEFAULT_MILESTONES);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const gData: any[] = await getGrowthData() || [];
+        const [gData, mData] = await Promise.all([getGrowthData(), getMilestones()]);
         if (gData && gData.length > 0) {
-          setRevenueData(gData.map(d => ({ name: d.month, amount: d.amount })));
+          setRevenueData(gData.map((d: any) => ({ name: d.month, amount: d.amount })));
         }
-        
-        const mData: any[] = await getMilestones() || [];
         if (mData && mData.length > 0) {
           setMilestones(mData);
         }
-
-        const sData: any = await getSiteConfig();
-        if (sData) {
-          setConfig(sData);
-        }
       } catch (e) {
-        console.warn("Failed to fetch from Firebase, using mocks", e);
+        console.warn("Using default progress metrics", e);
       }
     };
     fetchData();
   }, []);
 
+  const numericNetWorth = parseFloat(String(config.netWorth || "12450").replace(/,/g, "")) || 12450;
+  const phaseBenchmarks = PHASE_BENCHMARKS.map((item, idx) => {
+    if (idx === 1) {
+      return { ...item, current: Math.min(item.target, numericNetWorth) };
+    }
+    return item;
+  });
+
   return (
-    <div className="space-y-12 pb-20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+    <div className="space-y-12 pb-16">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-white/10 pb-8">
         <div className="space-y-2">
-          <h1 className="text-4xl md:text-6xl font-bold gold-gradient tracking-tight">PROGRESS DASHBOARD</h1>
-          <p className="text-muted-foreground">Real-time tracking of the ELITE GROUP $1M mission.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+            Performance Overview
+          </p>
+          <h1 className="font-heading text-4xl md:text-5xl font-semibold tracking-tight gold-gradient">
+            Progress Dashboard
+          </h1>
+          <p className="text-sm md:text-base text-zinc-400">
+            Tracking operational growth and milestones toward the ${config.valuationTarget || "1,000,000"} objective.
+          </p>
         </div>
-        <div className="bg-primary/10 border border-primary/20 px-4 py-2 rounded-lg flex items-center gap-3">
-          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-xs font-bold uppercase tracking-widest text-primary">Live Data Stream</span>
-        </div>
+        <p className="text-xs font-medium text-zinc-400">
+          Current Stage: <span className="text-primary font-semibold">{config.status}</span>
+        </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* KPI Cards */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {[
-          { label: "Total Revenue", value: config?.totalRevenue ? `$${config.totalRevenue}` : "$7,200", trend: "+12.5%", icon: CreditCard },
-          { label: "Net Worth Tracker", value: config?.netWorth ? `$${config.netWorth}` : "$12,450", trend: "+8.2%", icon: Landmark },
-          { label: "Growth Multiplier", value: config?.multiplier ? `x${config.multiplier}` : "x4.2", trend: "+1.2", icon: TrendingUp },
-          { label: "Mission Status", value: config?.status || "FOUNDATION", trend: "On Track", icon: Target },
+          { label: "Total Revenue", value: `$${config.totalRevenue}`, note: "Cumulative reported", icon: CreditCard },
+          { label: "Net Worth", value: `$${config.netWorth}`, note: "Verified capital base", icon: Landmark },
+          { label: "Growth Multiplier", value: `x${config.multiplier}`, note: "Period expansion rate", icon: TrendingUp },
+          { label: "Mission Phase", value: config.status, note: "2030 roadmap status", icon: Target },
         ].map((stat, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
+            transition={{ duration: 0.45, delay: i * 0.06, ease: EASE_OUT_EXPO }}
           >
-            <Card className="premium-card border-none">
+            <Card className="surface-card border-white/10">
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                    <stat.icon className="w-5 h-5" />
-                  </div>
-                  <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px]">
-                    {stat.trend}
-                  </Badge>
+                  <span className="text-xs font-medium text-zinc-400">{stat.label}</span>
+                  <stat.icon className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{stat.label}</p>
-                  <p className="text-3xl font-black mt-1">{stat.value}</p>
+                  <p className="font-mono text-2xl md:text-3xl font-semibold text-zinc-100 tabular-nums">
+                    {stat.value}
+                  </p>
+                  <p className="text-xs text-zinc-500 mt-1">{stat.note}</p>
                 </div>
               </CardContent>
             </Card>
@@ -109,80 +100,91 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Revenue Chart */}
-        <Card className="lg:col-span-2 premium-card border-none overflow-hidden">
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Monthly Revenue Chart */}
+        <Card className="lg:col-span-2 surface-card border-white/10">
           <CardHeader>
-            <CardTitle className="text-xl">Monthly Revenue Growth</CardTitle>
-            <CardDescription>Visualizing our climb since January 2025</CardDescription>
+            <CardTitle className="font-heading text-2xl font-semibold">Monthly Revenue Growth</CardTitle>
+            <CardDescription className="text-zinc-400">
+              Chronological revenue progression managed via the Admin Portal
+            </CardDescription>
           </CardHeader>
-          <CardContent className="h-[400px] w-full pt-10">
+          <CardContent className="h-[360px] w-full pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={revenueData}>
                 <defs>
                   <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#d4af37" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#d4af37" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#d4af37" stopOpacity={0.28} />
+                    <stop offset="95%" stopColor="#d4af37" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2c2c2c" />
-                <XAxis 
-                  dataKey="name" 
-                  stroke="#666" 
-                  fontSize={12} 
-                  tickLine={false} 
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
+                <XAxis
+                  dataKey="name"
+                  stroke="#71717a"
+                  fontSize={12}
+                  tickLine={false}
                   axisLine={false}
                 />
-                <YAxis 
-                  stroke="#666" 
-                  fontSize={12} 
-                  tickLine={false} 
+                <YAxis
+                  stroke="#71717a"
+                  fontSize={12}
+                  tickLine={false}
                   axisLine={false}
                   tickFormatter={(value) => `$${value}`}
                 />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: "#0a0a0a", border: "1px solid #d4af37", borderRadius: "12px" }}
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#111114",
+                    border: "1px solid rgba(212,175,55,0.35)",
+                    borderRadius: "10px",
+                    fontSize: "12px",
+                  }}
                   itemStyle={{ color: "#d4af37" }}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="amount" 
-                  stroke="#d4af37" 
-                  strokeWidth={3}
-                  fillOpacity={1} 
-                  fill="url(#colorAmount)" 
+                <Area
+                  type="monotone"
+                  dataKey="amount"
+                  stroke="#d4af37"
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#colorAmount)"
                 />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Milestone Tracker */}
-        <Card className="premium-card border-none">
+        {/* Active Milestones */}
+        <Card className="surface-card border-white/10">
           <CardHeader>
-            <CardTitle className="text-xl">Active Milestones</CardTitle>
-            <CardDescription>Our journey to the million dollar mark</CardDescription>
+            <CardTitle className="font-heading text-2xl font-semibold">Key Milestones</CardTitle>
+            <CardDescription className="text-zinc-400">
+              Verified checkpoints toward $1M scale
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
+            <div className="space-y-5">
               {milestones.map((ms, i) => (
-                <div key={i} className="flex gap-4 group">
-                  <div className="relative">
+                <div key={ms.id || i} className="flex gap-3.5 group">
+                  <div className="relative pt-0.5">
                     {ms.completed ? (
-                      <CheckCircle2 className="w-6 h-6 text-primary" />
+                      <CheckCircle2 className="w-5 h-5 text-primary" />
                     ) : (
-                      <Circle className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <Circle className="w-5 h-5 text-zinc-600" />
                     )}
                     {i !== milestones.length - 1 && (
-                      <div className="absolute top-6 left-3 w-px h-12 bg-border group-hover:bg-primary/30 transition-colors" />
+                      <div className="absolute top-6 left-2.5 w-px h-10 bg-white/10" />
                     )}
                   </div>
-                  <div className="space-y-1 pb-6">
-                    <h4 className={`font-bold leading-none ${ms.completed ? "text-foreground" : "text-muted-foreground"}`}>
+                  <div className="space-y-1 pb-4">
+                    <h4 className={`text-sm font-semibold leading-none ${ms.completed ? "text-zinc-100" : "text-zinc-400"}`}>
                       {ms.title}
                     </h4>
-                    <p className="text-xs text-muted-foreground">{ms.description}</p>
-                    {ms.date && <p className="text-[10px] uppercase font-bold text-primary/60">{ms.date}</p>}
+                    <p className="text-xs text-zinc-400 leading-relaxed">{ms.description}</p>
+                    {ms.date && (
+                      <p className="text-[11px] font-mono text-primary/80">{ms.date}</p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -191,44 +193,52 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Goal progression */}
-      <Card className="premium-card border-none">
+      {/* Phase Capital Roadmap */}
+      <Card className="surface-card border-white/10">
         <CardHeader>
-          <CardTitle className="text-xl text-center">The $1M Mission Roadmap</CardTitle>
+          <CardTitle className="font-heading text-2xl font-semibold">Capital Scaling Benchmarks</CardTitle>
+          <CardDescription className="text-zinc-400">
+            Stage-by-stage target progression from foundation to $1M valuation
+          </CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px] w-full">
+        <CardContent className="h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={growthPoints.length > 0 ? growthPoints : MOCK_GROWTH}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2c2c2c" />
-              <XAxis dataKey="phase" stroke="#666" fontSize={10} tickLine={false} axisLine={false} />
-              <YAxis stroke="#666" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v/1000}k`} />
-              <Tooltip 
-                cursor={{ fill: 'rgba(212, 175, 55, 0.05)' }}
-                contentStyle={{ backgroundColor: "#0a0a0a", border: "1px solid #d4af37", borderRadius: "12px" }}
+            <BarChart data={phaseBenchmarks}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="phase" stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v / 1000}k`} />
+              <Tooltip
+                cursor={{ fill: "rgba(212, 175, 55, 0.05)" }}
+                contentStyle={{
+                  backgroundColor: "#111114",
+                  border: "1px solid rgba(212,175,55,0.35)",
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                }}
               />
-              <Bar dataKey="target" radius={[6, 6, 0, 0]}>
-                {(growthPoints.length > 0 ? growthPoints : MOCK_GROWTH).map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color || "#d4af37"} opacity={0.3} />
+              <Bar dataKey="target" name="Target" radius={[6, 6, 0, 0]}>
+                {phaseBenchmarks.map((_, index) => (
+                  <Cell key={`target-${index}`} fill="#d4af37" opacity={0.25} />
                 ))}
               </Bar>
-              <Bar dataKey="current" radius={[6, 6, 0, 0]}>
-                {(growthPoints.length > 0 ? growthPoints : MOCK_GROWTH).map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill="#d4af37" />
+              <Bar dataKey="current" name="Current" radius={[6, 6, 0, 0]}>
+                {phaseBenchmarks.map((_, index) => (
+                  <Cell key={`current-${index}`} fill="#d4af37" />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
-        <div className="p-6 pt-0 flex justify-center gap-8 text-xs font-bold uppercase tracking-widest">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-primary rounded-sm" />
-              <span>Current Reached</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-primary/30 rounded-sm" />
-              <span>Target Goal</span>
-            </div>
+        <div className="px-6 pb-6 flex justify-center gap-8 text-xs font-medium text-zinc-400">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-primary rounded-sm" />
+            <span>Current Achieved</span>
           </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-primary/25 rounded-sm" />
+            <span>Phase Target</span>
+          </div>
+        </div>
       </Card>
     </div>
   );

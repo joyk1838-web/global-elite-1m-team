@@ -1,161 +1,162 @@
 import { motion } from "framer-motion";
-import { Home, Car, Globe, Heart, DollarSign, Wallet } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Home as HomeIcon, Car, Globe, Heart, Wallet } from "lucide-react";
+import { useSiteConfig } from "../context/SiteContext";
+import { LOCAL_ASSETS } from "../lib/defaults";
+
+const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const missions = [
   {
     icon: Heart,
-    title: "Family Debt Free",
-    desc: "Our primary mission was to clear all family burdens and ensure financial security for those we love.",
+    title: "Family Security",
+    desc: "Clearing legacy obligations and establishing lasting financial security for our families.",
     status: "Priority",
-    color: "bg-red-500/10 text-red-500"
   },
   {
-    icon: Home,
-    title: "Build House",
-    desc: "A symbol of stability and foundation. Building a home that represents the growth of our legacy.",
+    icon: HomeIcon,
+    title: "Foundation Assets",
+    desc: "Building enduring real estate and family equity that anchors long-term stability.",
     status: "In Progress",
-    color: "bg-blue-500/10 text-blue-500"
   },
   {
     icon: Car,
-    title: "Dream Vehicle",
-    desc: "Acquiring tools of mobility and status that match the level of our operation.",
+    title: "Executive Mobility",
+    desc: "Equipping leadership with operational mobility aligned with international enterprise standards.",
     status: "Upcoming",
-    color: "bg-yellow-500/10 text-yellow-500"
   },
   {
     icon: Globe,
-    title: "Global Brand",
-    desc: "Transforming ELITE GROUP from a local venture into a globally recognized standard of excellence.",
+    title: "Global Brand Authority",
+    desc: "Expanding ELITE GROUP from a regional venture into an internationally recognized standard.",
     status: "Long Term",
-    color: "bg-green-500/10 text-green-500"
   },
   {
     icon: Wallet,
-    title: "Financial Freedom",
-    desc: "Achieving a state where our time is our own, and our assets work to maintain our lifestyle.",
-    status: "The Goal",
-    color: "bg-primary/10 text-primary"
-  }
+    title: "Financial Sovereignty",
+    desc: "Structuring compounding assets that sustain independent growth across market cycles.",
+    status: "Core Objective",
+  },
 ];
 
 export default function Mission() {
+  const { config } = useSiteConfig();
+
   return (
-    <div className="space-y-20 pb-20">
-      <div className="text-center space-y-6 max-w-3xl mx-auto">
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight gold-gradient leading-tight">OUR MISSION</h1>
-        <p className="text-xl text-muted-foreground font-light">
-          Everything we do is driven by purpose. From humble beginnings to concrete achievements, 
-          these are the pillars of our journey.
+    <div className="space-y-20 pb-16">
+      <div className="text-center space-y-4 max-w-3xl mx-auto">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+          Purpose & Mandate
+        </p>
+        <h1 className="font-heading text-4xl md:text-6xl font-semibold tracking-tight gold-gradient">
+          Our Corporate Mission
+        </h1>
+        <p className="text-base md:text-lg text-zinc-400 leading-relaxed">
+          {config.mission}
         </p>
       </div>
 
-      {/* ELITE TEAM 07 Special Section */}
-      <section className="relative py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-primary/5 rounded-3xl -z-10" />
-        <div className="text-center space-y-8 max-w-4xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="inline-block p-4 rounded-full bg-primary/10 mb-4"
-          >
-            <DollarSign className="w-12 h-12 text-primary" />
-          </motion.div>
-          <h2 className="text-4xl md:text-6xl font-black tracking-tighter">
-            ELITE <span className="gold-text">TEAM 07</span> GOAL
-          </h2>
-          <div className="h-1 w-24 bg-primary mx-auto rounded-full" />
-          <p className="text-2xl md:text-3xl font-heading italic text-muted-foreground leading-relaxed">
-            "To transform the financial trajectory of our core unit and establish 
-            unshakeable prosperity through collective excellence."
+      {/* ELITE TEAM 07 Mandate */}
+      <section className="rounded-3xl border border-white/10 bg-[#111114] p-8 sm:p-12 lg:p-16 space-y-10">
+        <div className="max-w-3xl mx-auto text-center space-y-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+            Strategic Mandate
           </p>
-          <div className="grid md:grid-cols-3 gap-6 pt-12">
-            <div className="p-6 premium-card rounded-2xl border-primary/20">
-              <h4 className="text-primary font-bold text-sm uppercase tracking-widest mb-2">Phase 1</h4>
-              <p className="text-lg font-bold">Foundation Zero</p>
-              <p className="text-sm text-muted-foreground mt-2">Clearing all historical liabilities and setting the baseline for growth.</p>
-            </div>
-            <div className="p-6 premium-card rounded-2xl border-primary/20 gold-glow">
-              <h4 className="text-primary font-bold text-sm uppercase tracking-widest mb-2">Phase 2</h4>
-              <p className="text-lg font-bold">Asset Accumulation</p>
-              <p className="text-sm text-muted-foreground mt-2">Strategic deployment of capital into high-yield elite ventures.</p>
-            </div>
-            <div className="p-6 premium-card rounded-2xl border-primary/20">
-              <h4 className="text-primary font-bold text-sm uppercase tracking-widest mb-2">Phase 3</h4>
-              <p className="text-lg font-bold">Generational Freedom</p>
-              <p className="text-sm text-muted-foreground mt-2">The complete shift into a wealth-sustaining ecosystem by 2030.</p>
-            </div>
-          </div>
+          <h2 className="font-heading text-3xl md:text-4xl font-semibold tracking-tight">
+            ELITE TEAM 07 Three-Phase Framework
+          </h2>
+          <p className="text-base text-zinc-400 leading-relaxed">
+            Transforming our capital trajectory through disciplined sequencing and compounding enterprise execution.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            {
+              phase: "01. Foundation Zero",
+              desc: "Eliminating structural liabilities and establishing profitable unit economics.",
+            },
+            {
+              phase: "02. Asset Accumulation",
+              desc: "Deploying cashflow into scalable consumer, financial, and lifestyle ventures.",
+            },
+            {
+              phase: "03. Generational Scale",
+              desc: "Transitioning into an autonomous, globally diversified holding institution by 2030.",
+            },
+          ].map((item, idx) => (
+            <motion.div
+              key={item.phase}
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.5, delay: idx * 0.08, ease: EASE_OUT_EXPO }}
+              className="p-7 rounded-2xl bg-black/40 border border-white/10 space-y-3"
+            >
+              <h3 className="font-semibold text-base text-primary">{item.phase}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">{item.desc}</p>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {/* Core Pillars Grid */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {missions.map((mission, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.5, delay: i * 0.06, ease: EASE_OUT_EXPO }}
+            className="p-7 rounded-2xl surface-card space-y-4"
           >
-            <Card className="premium-card h-full border-none group overflow-hidden">
-              <CardContent className="p-8 flex flex-col items-center text-center space-y-6">
-                <div className={`p-4 rounded-2xl ${mission.color} group-hover:scale-110 transition-transform duration-500`}>
-                  <mission.icon className="w-10 h-10" />
-                </div>
-                <div className="space-y-4">
-                  <span className="text-[10px] uppercase tracking-widest font-bold opacity-50 bg-muted px-2 py-1 rounded">
-                    {mission.status}
-                  </span>
-                  <h3 className="text-2xl font-bold">{mission.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {mission.desc}
-                  </p>
-                </div>
-              </CardContent>
-              <div className="h-1 w-full bg-primary/10 group-hover:bg-primary transition-colors" />
-            </Card>
+            <div className="flex items-center justify-between">
+              <mission.icon className="w-5 h-5 text-primary" />
+              <span className="text-xs text-zinc-400 font-medium">{mission.status}</span>
+            </div>
+            <h3 className="font-heading text-2xl font-semibold text-zinc-100">{mission.title}</h3>
+            <p className="text-sm text-zinc-400 leading-relaxed">{mission.desc}</p>
           </motion.div>
         ))}
       </div>
 
-      {/* Philosophy Section */}
-      <section className="bg-muted/30 rounded-3xl p-12 lg:p-20 border border-border">
+      {/* Philosophy Split */}
+      <section className="rounded-3xl border border-white/10 bg-[#111114] p-8 sm:p-12 lg:p-16">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <h2 className="text-4xl font-bold">The Elite <span className="gold-text">Philosophy</span></h2>
-            <div className="space-y-4 text-lg text-muted-foreground">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
+              Operating Standard
+            </p>
+            <h2 className="font-heading text-3xl md:text-4xl font-semibold">
+              Discipline Before Scale
+            </h2>
+            <div className="space-y-4 text-base text-zinc-400 leading-relaxed">
               <p>
-                We believe that true wealth is not just about numbers—it's about the ability 
-                to provide, create, and lead. Our mission is personal, but our execution is professional.
+                Sustainable enterprise value is never built on short-term noise. It requires
+                consistent operational rigor, clear accountability, and patient capital stewardship.
               </p>
               <p>
-                Every milestone achieved is a testament to the fact that with enough focus and 
-                discipline, any barrier can be broken. We are not just clearing debts; we are 
-                clearing paths for future generations.
+                Every milestone reached reflects a shared commitment across our leadership to build
+                institutions that endure for decades.
               </p>
             </div>
-            <div className="flex items-center gap-6 pt-4">
-              <div className="flex flex-col">
-                <span className="text-3xl font-black gold-text">100%</span>
-                <span className="text-xs uppercase tracking-tighter opacity-50">Commitment</span>
+            <div className="flex items-center gap-8 pt-4 border-t border-white/10">
+              <div>
+                <span className="font-mono text-2xl font-semibold gold-text tabular-nums">100%</span>
+                <p className="text-xs text-zinc-400 mt-1">Execution Focus</p>
               </div>
-              <div className="w-px h-10 bg-border" />
-              <div className="flex flex-col">
-                <span className="text-3xl font-black gold-text">2030</span>
-                <span className="text-xs uppercase tracking-tighter opacity-50">Vision Target</span>
+              <div className="w-px h-10 bg-white/10" />
+              <div>
+                <span className="font-mono text-2xl font-semibold gold-text tabular-nums">2030</span>
+                <p className="text-xs text-zinc-400 mt-1">Horizon Target</p>
               </div>
             </div>
           </div>
-          <div className="relative">
-            <div className="absolute -inset-2 bg-primary/20 blur-2xl rounded-full" />
+          <div className="relative rounded-2xl overflow-hidden border border-white/10">
             <img
-              src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=1000"
-              alt="Mission planning"
-              className="relative rounded-2xl object-cover aspect-video gold-border"
-              referrerPolicy="no-referrer"
+              src={LOCAL_ASSETS.strategyRoom}
+              alt="Executive planning session"
+              className="w-full aspect-video object-cover"
             />
           </div>
         </div>

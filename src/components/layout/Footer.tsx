@@ -1,51 +1,73 @@
 import { Link } from "react-router-dom";
-import { Github, Instagram, Linkedin, Twitter } from "lucide-react";
+import { Instagram, Linkedin, Mail, Twitter } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
+import { useSiteConfig } from "../../context/SiteContext";
 
 export default function Footer() {
+  const { config } = useSiteConfig();
+
+  const socialLinks = [
+    { href: config.linkedinUrl, icon: Linkedin, label: "LinkedIn" },
+    { href: config.twitterUrl, icon: Twitter, label: "X / Twitter" },
+    { href: config.instagramUrl, icon: Instagram, label: "Instagram" },
+    { href: config.contactEmail ? `mailto:${config.contactEmail}` : "", icon: Mail, label: "Email" },
+  ].filter((item) => Boolean(item.href && item.href.trim() !== ""));
+
   return (
-    <footer className="bg-card border-t border-border mt-auto">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-          <div className="col-span-1 md:col-span-2">
-            <Link to="/" className="flex items-center gap-3 mb-6">
+    <footer className="bg-[#09090b] border-t border-white/10 mt-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
+          <div className="md:col-span-5 space-y-5">
+            <Link to="/" className="inline-flex items-center gap-3">
               <Logo size="md" />
               <div className="flex flex-col leading-tight">
-                <span className="font-heading text-2xl font-bold tracking-wider gold-gradient">ELITE GROUP</span>
-                <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Building Excellence</span>
+                <span className="font-heading text-xl font-semibold tracking-wider gold-gradient">
+                  {config.companyName || "ELITE GROUP"}
+                </span>
+                <span className="text-xs text-zinc-400">
+                  {config.tagline || "Building Excellence"}
+                </span>
               </div>
             </Link>
-            <p className="text-muted-foreground max-w-sm mb-6 leading-relaxed">
-              Our mission is to build a global ecosystem of elite businesses, 
-              scaling from humble beginnings to a million-dollar empire.
+            <p className="text-sm text-zinc-400 max-w-sm leading-relaxed">
+              {config.mission}
             </p>
-            <div className="flex gap-4">
-              {[Twitter, Instagram, Linkedin, Github].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="w-10 h-10 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-all gold-glow"
-                >
-                  <Icon className="w-5 h-5" />
-                </a>
-              ))}
-            </div>
+            {socialLinks.length > 0 && (
+              <div className="flex items-center gap-3 pt-1">
+                {socialLinks.map((item) => (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    target={item.href.startsWith("mailto:") ? undefined : "_blank"}
+                    rel={item.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
+                    aria-label={item.label}
+                    className="w-9 h-9 rounded-lg border border-white/10 flex items-center justify-center text-zinc-400 hover:border-primary/50 hover:text-primary transition-colors"
+                  >
+                    <item.icon className="w-4 h-4" />
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div>
-            <h4 className="font-heading text-lg font-bold mb-6 gold-text">Navigation</h4>
-            <ul className="space-y-4">
+          <div className="md:col-span-4">
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-zinc-300 mb-5">
+              Company
+            </h4>
+            <ul className="grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
               {[
                 { label: "Home", path: "/" },
                 { label: "Mission", path: "/mission" },
-                { label: "Vision", path: "/vision" },
-                { label: "Team", path: "/team" },
-                { label: "Progress", path: "/dashboard" }
+                { label: "Vision 2030", path: "/vision" },
+                { label: "Leadership", path: "/team" },
+                { label: "Progress", path: "/dashboard" },
+                { label: "Roadmap", path: "/timeline" },
+                { label: "Gallery", path: "/gallery" },
               ].map((item) => (
-                <li key={item.label}>
+                <li key={item.path}>
                   <Link
                     to={item.path}
-                    className="text-muted-foreground hover:text-primary transition-colors"
+                    className="text-zinc-400 hover:text-primary transition-colors"
                   >
                     {item.label}
                   </Link>
@@ -53,14 +75,34 @@ export default function Footer() {
               ))}
             </ul>
           </div>
+
+          <div className="md:col-span-3">
+            <h4 className="text-xs font-semibold uppercase tracking-widest text-zinc-300 mb-5">
+              Corporate Portal
+            </h4>
+            <div className="space-y-3 text-sm text-zinc-400">
+              {config.contactEmail && (
+                <p>
+                  <a
+                    href={`mailto:${config.contactEmail}`}
+                    className="hover:text-primary transition-colors"
+                  >
+                    {config.contactEmail}
+                  </a>
+                </p>
+              )}
+              <p>
+                <Link to="/admin" className="text-primary hover:underline font-medium">
+                  Executive Admin Portal
+                </Link>
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="border-t border-border mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-yellow-600/50">
-          <p>© 2026 ELITE GROUP. All rights reserved.</p>
-          <div className="flex gap-6">
-            <a href="#" className="hover:text-primary">Privacy Policy</a>
-            <a href="#" className="hover:text-primary">Terms of Service</a>
-          </div>
+        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-zinc-500">
+          <p>© {new Date().getFullYear()} {config.companyName || "ELITE GROUP"}. All rights reserved.</p>
+          <p>Dhaka · Dubai · London · Singapore</p>
         </div>
       </div>
     </footer>
