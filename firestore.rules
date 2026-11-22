@@ -1,0 +1,101 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Standard auth helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      // User email designated as administrator
+      return isSignedIn() && request.auth.token.email == 'joyk1838@gmail.com';
+    }
+
+    // Entity validation helpers
+    function isValidBrand(data) {
+      return data.keys().hasAll(['name', 'image', 'order']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.image is string && data.image.size() > 0 && data.image.size() <= 500 &&
+             data.order is number;
+    }
+
+    function isValidTeamMember(data) {
+      return data.keys().hasAll(['name', 'role', 'image', 'order']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.role is string && data.role.size() > 0 && data.role.size() <= 100 &&
+             data.image is string && data.image.size() > 0 && data.image.size() <= 500 &&
+             data.order is number;
+    }
+
+    function isValidGalleryItem(data) {
+      return data.keys().hasAll(['url', 'title', 'uploadedAt']) &&
+             data.url is string && data.url.size() > 0 && data.url.size() <= 500 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 100;
+    }
+
+    function isValidTimeline(data) {
+      return data.keys().hasAll(['year', 'title', 'status', 'order']) &&
+             data.year is string &&
+             data.title is string &&
+             data.status is string &&
+             data.order is number;
+    }
+
+    function isValidMilestone(data) {
+      return data.keys().hasAll(['title', 'completed', 'order']) &&
+             data.title is string &&
+             data.completed is bool &&
+             data.order is number;
+    }
+
+    function isValidGrowth(data) {
+      return data.keys().hasAll(['month', 'amount']) &&
+             data.month is string &&
+             data.amount is number;
+    }
+
+    // Global deny by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    match /brands/{brandId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidBrand(request.resource.data);
+    }
+
+    match /team/{memberId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidTeamMember(request.resource.data);
+    }
+
+    match /gallery/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidGalleryItem(request.resource.data);
+    }
+
+    match /timeline/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidTimeline(request.resource.data);
+    }
+
+    match /milestones/{milestoneId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidMilestone(request.resource.data);
+    }
+
+    match /growth/{growthId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidGrowth(request.resource.data);
+    }
+
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

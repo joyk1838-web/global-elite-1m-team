@@ -1,0 +1,130 @@
+{
+  "entities": {
+    "Brand": {
+      "title": "Brand",
+      "description": "Core brands of Elite Group",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "tagline": { "type": "string" },
+        "image": { "type": "string" },
+        "link": { "type": "string" },
+        "desc": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["name", "image", "order"]
+    },
+    "TeamMember": {
+      "title": "Team Member",
+      "description": "Leadership team of Elite Group",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "bio": { "type": "string" },
+        "image": { "type": "string" },
+        "badges": { "type": "array", "items": { "type": "string" } },
+        "initials": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["name", "role", "image", "order"]
+    },
+    "GalleryItem": {
+      "title": "Gallery Item",
+      "description": "Visual highlights and achievements",
+      "type": "object",
+      "properties": {
+        "url": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "uploadedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["url", "title", "uploadedAt"]
+    },
+    "TimelineEvent": {
+      "title": "Timeline Event",
+      "description": "Milestones and roadmap events for Elite Group",
+      "type": "object",
+      "properties": {
+        "year": { "type": "string" },
+        "title": { "type": "string" },
+        "desc": { "type": "string" },
+        "icon": { "type": "string" },
+        "status": { "type": "string" },
+        "order": { "type": "number" }
+      },
+      "required": ["year", "title", "status", "order"]
+    },
+    "Milestone": {
+      "title": "Milestone",
+      "description": "Key milestone items for dashboard tracking",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "order": { "type": "number" }
+      },
+      "required": ["title", "completed", "order"]
+    },
+    "GrowthPoint": {
+      "title": "Growth Point",
+      "description": "Financial and phase progression tracking",
+      "type": "object",
+      "properties": {
+        "month": { "type": "string" },
+        "amount": { "type": "number" },
+        "phase": { "type": "string" },
+        "target": { "type": "number" },
+        "current": { "type": "number" }
+      },
+      "required": ["month", "amount"]
+    },
+    "SiteConfig": {
+      "title": "Site Config",
+      "description": "Global configuration and live stats",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "mission": { "type": "string" },
+        "vision": { "type": "string" },
+        "totalRevenue": { "type": "string" },
+        "netWorth": { "type": "string" },
+        "multiplier": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["title", "mission"]
+    }
+  },
+  "firestore": {
+    "brands": {
+      "schema": "Brand",
+      "description": "Collection of corporate brands"
+    },
+    "team": {
+      "schema": "TeamMember",
+      "description": "Leadership team members"
+    },
+    "gallery": {
+      "schema": "GalleryItem",
+      "description": "Corporate gallery items"
+    },
+    "timeline": {
+      "schema": "TimelineEvent",
+      "description": "Chronological roadmap events"
+    },
+    "milestones": {
+      "schema": "Milestone",
+      "description": "Mission milestones"
+    },
+    "growth": {
+      "schema": "GrowthPoint",
+      "description": "Growth points and revenue charts"
+    },
+    "config": {
+      "schema": "SiteConfig",
+      "description": "Global platform configurations"
+    }
+  }
+}
