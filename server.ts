@@ -68,6 +68,22 @@ async function startServer() {
     }
   });
 
+  // Serve SEO files explicitly so they never fall back to index.html
+  const staticRoot =
+    process.env.NODE_ENV === "production"
+      ? path.join(process.cwd(), "dist")
+      : path.join(process.cwd(), "public");
+
+  app.get("/sitemap.xml", (_req, res) => {
+    res.type("application/xml; charset=utf-8");
+    res.sendFile(path.join(staticRoot, "sitemap.xml"));
+  });
+
+  app.get("/robots.txt", (_req, res) => {
+    res.type("text/plain; charset=utf-8");
+    res.sendFile(path.join(staticRoot, "robots.txt"));
+  });
+
   // Vite integration: middleware in dev, static serving in prod
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
