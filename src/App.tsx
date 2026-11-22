@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/layout/Layout";
 import Home from "./pages/Home";
 import Mission from "./pages/Mission";
@@ -19,9 +19,11 @@ export default function App() {
           <Route path="vision" element={<Vision />} />
           <Route path="team" element={<Team />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="progress" element={<Navigate to="/dashboard" replace />} />
           <Route path="timeline" element={<Timeline />} />
           <Route path="gallery" element={<Gallery />} />
           <Route path="admin" element={<Admin />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </Router>

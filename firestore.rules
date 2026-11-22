@@ -5,10 +5,6 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
-    
-    function isEmailVerified() {
-      return isSignedIn() && request.auth.token.email_verified == true;
-    }
 
     function isAdmin() {
       // User email designated as administrator
@@ -65,32 +61,38 @@ service cloud.firestore {
 
     match /brands/{brandId} {
       allow read: if true;
-      allow write: if isAdmin() && isValidBrand(request.resource.data);
+      allow create, update: if isAdmin() && isValidBrand(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /team/{memberId} {
       allow read: if true;
-      allow write: if isAdmin() && isValidTeamMember(request.resource.data);
+      allow create, update: if isAdmin() && isValidTeamMember(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /gallery/{itemId} {
       allow read: if true;
-      allow write: if isAdmin() && isValidGalleryItem(request.resource.data);
+      allow create, update: if isAdmin() && isValidGalleryItem(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /timeline/{eventId} {
       allow read: if true;
-      allow write: if isAdmin() && isValidTimeline(request.resource.data);
+      allow create, update: if isAdmin() && isValidTimeline(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /milestones/{milestoneId} {
       allow read: if true;
-      allow write: if isAdmin() && isValidMilestone(request.resource.data);
+      allow create, update: if isAdmin() && isValidMilestone(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /growth/{growthId} {
       allow read: if true;
-      allow write: if isAdmin() && isValidGrowth(request.resource.data);
+      allow create, update: if isAdmin() && isValidGrowth(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /config/{configId} {

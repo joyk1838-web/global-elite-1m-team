@@ -196,21 +196,21 @@ export default function Home() {
               name: "Elite Soft Drink",
               tagline: "Ultra-Premium Hydration",
               image: "https://lh3.googleusercontent.com/d/1zd5W3ODQ-8wdU8zn_ABNn8CR7a-6BTgz",
-              link: "#",
+              link: "/vision",
               desc: "Engineered for elite performance and cognitive clarity."
             },
             {
               name: "Elite Funder",
               tagline: "Capitalized Scaling",
               image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=1000",
-              link: "#",
+              link: "/dashboard",
               desc: "Revolutionizing business funding and wealth generation."
             },
             {
               name: "Elite Fashion",
               tagline: "Bespoke Luxury",
               image: "https://lh3.googleusercontent.com/d/1J1UaPpZ95un_go-wFGAQ8sMiUMUsdIDZ",
-              link: "#",
+              link: "/gallery",
               desc: "High-end artisanal apparel for the discerning visionary."
             }
           ]).map((brand, i) => (
@@ -239,7 +239,7 @@ export default function Home() {
                 <p className="text-sm text-muted-foreground font-light leading-relaxed">
                   {brand.desc}
                 </p>
-                <Link to={brand.link} className="inline-flex items-center text-primary text-xs font-bold uppercase tracking-widest group/link">
+                <Link to={brand.link && brand.link !== "#" ? brand.link : "/vision"} className="inline-flex items-center text-primary text-xs font-bold uppercase tracking-widest group/link">
                   Explore Brand
                   <ArrowRight className="ml-2 w-3 h-3 transition-transform group-hover/link:translate-x-1" />
                 </Link>

@@ -35,13 +35,19 @@ export default function Footer() {
           <div>
             <h4 className="font-heading text-lg font-bold mb-6 gold-text">Navigation</h4>
             <ul className="space-y-4">
-              {["Home", "Mission", "Vision", "Team", "Progress"].map((item) => (
-                <li key={item}>
+              {[
+                { label: "Home", path: "/" },
+                { label: "Mission", path: "/mission" },
+                { label: "Vision", path: "/vision" },
+                { label: "Team", path: "/team" },
+                { label: "Progress", path: "/dashboard" }
+              ].map((item) => (
+                <li key={item.label}>
                   <Link
-                    to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
+                    to={item.path}
                     className="text-muted-foreground hover:text-primary transition-colors"
                   >
-                    {item}
+                    {item.label}
                   </Link>
                 </li>
               ))}

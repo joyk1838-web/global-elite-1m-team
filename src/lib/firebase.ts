@@ -1,10 +1,24 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
-import firebaseConfig from '../../firebase-applet-config.json';
+import defaultFirebaseConfig from '../../firebase-applet-config.json';
+
+const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
+
+const firebaseConfig = {
+  apiKey: env.VITE_FIREBASE_API_KEY || defaultFirebaseConfig.apiKey,
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || defaultFirebaseConfig.authDomain,
+  projectId: env.VITE_FIREBASE_PROJECT_ID || defaultFirebaseConfig.projectId,
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || defaultFirebaseConfig.storageBucket,
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || defaultFirebaseConfig.messagingSenderId,
+  appId: env.VITE_FIREBASE_APP_ID || defaultFirebaseConfig.appId,
+  firestoreDatabaseId: env.VITE_FIREBASE_DATABASE_ID || defaultFirebaseConfig.firestoreDatabaseId,
+};
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = firebaseConfig.firestoreDatabaseId
+  ? getFirestore(app, firebaseConfig.firestoreDatabaseId)
+  : getFirestore(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
@@ -34,10 +48,14 @@ export interface FirestoreErrorInfo {
     emailVerified: boolean;
     isAnonymous: boolean;
     providerInfo: { providerId: string; displayName: string; email: string; }[];
-  }
+  };
 }
 
-export function handleFirestoreError(error: any, operationType: FirestoreErrorInfo['operationType'], path: string | null = null): never {
+export function handleFirestoreError(
+  error: unknown,
+  operationType: FirestoreErrorInfo['operationType'],
+  path: string | null = null
+): never {
   const authInfo = auth.currentUser ? {
     userId: auth.currentUser.uid,
     email: auth.currentUser.email || '',

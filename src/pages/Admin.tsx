@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Lock, Crown, LogOut, ShieldCheck, Edit, Plus, Trash2, Save, Database, TrendingUp } from "lucide-react";
+import { Lock, Crown, LogOut, ShieldCheck, Edit, Plus, Trash2, Save, Database, CheckCircle2, Circle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,9 +7,42 @@ import { useAuth } from "../context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { updateSiteConfig, getBrands, getTeam, getTimeline, updateTimelineEvent } from "../services/firebase";
+import {
+  getSiteConfig,
+  updateSiteConfig,
+  getBrands,
+  deleteBrand,
+  getTeam,
+  saveTeamMember,
+  deleteTeamMember,
+  getTimeline,
+  deleteTimelineEvent,
+  getMilestones,
+  saveMilestone,
+  deleteMilestone
+} from "../services/firebase";
 import { db } from "../lib/firebase";
 import { collection, setDoc, doc } from "firebase/firestore";
+
+interface SiteConfigForm {
+  title: string;
+  mission: string;
+  vision: string;
+  totalRevenue: string;
+  netWorth: string;
+  multiplier: string;
+  status: string;
+}
+
+const DEFAULT_SITE_CONFIG: SiteConfigForm = {
+  title: "Building Excellence",
+  mission: "Scale from $1K to $1M and achieve total financial freedom.",
+  vision: "Global dominance by 2030.",
+  totalRevenue: "7,200",
+  netWorth: "12,450",
+  multiplier: "4.2",
+  status: "FOUNDATION"
+};
 
 export default function Admin() {
   const { user, login, logout, isAdmin, loading, error } = useAuth();
@@ -18,7 +51,15 @@ export default function Admin() {
   const [brands, setBrands] = useState<any[]>([]);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [timeline, setTimeline] = useState<any[]>([]);
+  const [milestones, setMilestones] = useState<any[]>([]);
+  const [siteConfig, setSiteConfig] = useState<SiteConfigForm>(DEFAULT_SITE_CONFIG);
   const [statusBanner, setStatusBanner] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // All modal/editing states declared unconditionally at top level (Rules of Hooks)
+  const [editingBrand, setEditingBrand] = useState<any>(null);
+  const [editingTimeline, setEditingTimeline] = useState<any>(null);
+  const [editingMember, setEditingMember] = useState<any>(null);
+  const [editingMilestone, setEditingMilestone] = useState<any>(null);
 
   const showStatus = (type: 'success' | 'error', message: string) => {
     setStatusBanner({ type, message });
@@ -27,11 +68,34 @@ export default function Admin() {
     }, 5000);
   };
 
+  const refreshAllData = async () => {
+    const [bData, tData, tlData, mData, sData] = await Promise.all([
+      getBrands(),
+      getTeam(),
+      getTimeline(),
+      getMilestones(),
+      getSiteConfig()
+    ]);
+    setBrands(bData || []);
+    setTeamMembers(tData || []);
+    setTimeline(tlData || []);
+    setMilestones(mData || []);
+    if (sData) {
+      setSiteConfig({
+        title: sData.title || DEFAULT_SITE_CONFIG.title,
+        mission: sData.mission || DEFAULT_SITE_CONFIG.mission,
+        vision: sData.vision || DEFAULT_SITE_CONFIG.vision,
+        totalRevenue: sData.totalRevenue || DEFAULT_SITE_CONFIG.totalRevenue,
+        netWorth: sData.netWorth || DEFAULT_SITE_CONFIG.netWorth,
+        multiplier: sData.multiplier || DEFAULT_SITE_CONFIG.multiplier,
+        status: sData.status || DEFAULT_SITE_CONFIG.status
+      });
+    }
+  };
+
   useEffect(() => {
     if (isAdmin) {
-      getBrands().then(data => setBrands(data || []));
-      getTeam().then(data => setTeamMembers(data || []));
-      getTimeline().then(data => setTimeline(data || []));
+      refreshAllData();
     }
   }, [isAdmin]);
 
@@ -40,15 +104,7 @@ export default function Admin() {
     if (!isAdmin) return;
     setSaving(true);
     try {
-      await updateSiteConfig({
-        title: "Building Excellence",
-        mission: "Scale from $1K to $1M and achieve total financial freedom.",
-        vision: "Global dominance by 2030.",
-        totalRevenue: "7,200",
-        netWorth: "12,450",
-        multiplier: "4.2",
-        status: "FOUNDATION"
-      });
+      await updateSiteConfig({ ...DEFAULT_SITE_CONFIG });
 
       // Seed Brands
       const demoBrands = [
@@ -159,12 +215,188 @@ export default function Admin() {
       }
 
       showStatus("success", "Database seeded successfully with all ELITE GROUP assets!");
-      getBrands().then(data => setBrands(data || []));
-      getTeam().then(data => setTeamMembers(data || []));
-      getTimeline().then(data => setTimeline(data || []));
+      await refreshAllData();
     } catch (e) {
       console.error(e);
       showStatus("error", "Seeding encountered an error. Please verify database connectivity.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveGeneralConfig = async () => {
+    setSaving(true);
+    try {
+      await updateSiteConfig({ ...siteConfig });
+      showStatus("success", "Global site metrics & identity updated.");
+    } catch (e) {
+      console.error(e);
+      showStatus("error", "Failed to save site configuration.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveMember = async (member: any) => {
+    setSaving(true);
+    try {
+      const id = member.id || doc(collection(db, "team")).id;
+      const badgesArray = Array.isArray(member.badges)
+        ? member.badges
+        : String(member.badgesText || "")
+            .split(",")
+            .map((b: string) => b.trim())
+            .filter(Boolean);
+
+      await saveTeamMember(id, {
+        name: member.name,
+        role: member.role,
+        bio: member.bio || "",
+        image: member.image,
+        initials: member.initials || member.name?.slice(0, 2).toUpperCase() || "EL",
+        badges: badgesArray,
+        order: Number(member.order) || 1
+      });
+      showStatus("success", "Leadership member saved.");
+      setEditingMember(null);
+      setTeamMembers((await getTeam()) || []);
+    } catch (e) {
+      console.error(e);
+      showStatus("error", "Failed to save team member.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteMember = async (id: string) => {
+    setSaving(true);
+    try {
+      await deleteTeamMember(id);
+      showStatus("success", "Team member removed.");
+      setTeamMembers((await getTeam()) || []);
+    } catch (e) {
+      console.error(e);
+      showStatus("error", "Failed to remove team member.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveBrand = async (brand: any) => {
+    setSaving(true);
+    try {
+      const brandId = brand.id || doc(collection(db, "brands")).id;
+      await setDoc(doc(db, "brands", brandId), {
+        ...brand,
+        order: Number(brand.order) || 1
+      }, { merge: true });
+      showStatus("success", "Brand updated successfully.");
+      setEditingBrand(null);
+      setBrands((await getBrands()) || []);
+    } catch (e) {
+      console.error(e);
+      showStatus("error", "Failed to save brand.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteBrand = async (id: string) => {
+    setSaving(true);
+    try {
+      await deleteBrand(id);
+      showStatus("success", "Brand removed from portfolio.");
+      setBrands((await getBrands()) || []);
+    } catch (e) {
+      console.error(e);
+      showStatus("error", "Failed to delete brand.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveMilestone = async (ms: any) => {
+    setSaving(true);
+    try {
+      const id = ms.id || doc(collection(db, "milestones")).id;
+      await saveMilestone(id, {
+        title: ms.title,
+        description: ms.description || "",
+        date: ms.date || "",
+        completed: Boolean(ms.completed),
+        order: Number(ms.order) || 1
+      });
+      showStatus("success", "Milestone saved.");
+      setEditingMilestone(null);
+      setMilestones((await getMilestones()) || []);
+    } catch (e) {
+      console.error(e);
+      showStatus("error", "Failed to save milestone.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleMilestoneStatus = async (ms: any) => {
+    setSaving(true);
+    try {
+      await saveMilestone(ms.id, {
+        ...ms,
+        completed: !ms.completed,
+        order: Number(ms.order) || 1
+      });
+      showStatus("success", `Milestone "${ms.title}" updated.`);
+      setMilestones((await getMilestones()) || []);
+    } catch (e) {
+      console.error(e);
+      showStatus("error", "Failed to toggle milestone.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteMilestone = async (id: string) => {
+    setSaving(true);
+    try {
+      await deleteMilestone(id);
+      showStatus("success", "Milestone removed.");
+      setMilestones((await getMilestones()) || []);
+    } catch (e) {
+      console.error(e);
+      showStatus("error", "Failed to delete milestone.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveTimeline = async (ev: any) => {
+    setSaving(true);
+    try {
+      const id = ev.id || doc(collection(db, "timeline")).id;
+      await setDoc(doc(db, "timeline", id), {
+        ...ev,
+        order: Number(ev.order) || 1
+      }, { merge: true });
+      showStatus("success", "Timeline event updated successfully.");
+      setEditingTimeline(null);
+      setTimeline((await getTimeline()) || []);
+    } catch (e) {
+      console.error(e);
+      showStatus("error", "Failed to save timeline event.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteTimeline = async (id: string) => {
+    setSaving(true);
+    try {
+      await deleteTimelineEvent(id);
+      showStatus("success", "Timeline event deleted.");
+      setTimeline((await getTimeline()) || []);
+    } catch (e) {
+      console.error(e);
+      showStatus("error", "Failed to delete timeline event.");
     } finally {
       setSaving(false);
     }
@@ -233,41 +465,6 @@ export default function Admin() {
     );
   }
 
-  const [editingBrand, setEditingBrand] = useState<any>(null);
-  const [editingTimeline, setEditingTimeline] = useState<any>(null);
-
-  const saveBrand = async (brand: any) => {
-    setSaving(true);
-    try {
-      const brandId = brand.id || doc(collection(db, "brands")).id;
-      await setDoc(doc(db, "brands", brandId), brand, { merge: true });
-      showStatus("success", "Brand updated successfully.");
-      setEditingBrand(null);
-      getBrands().then(data => setBrands(data || []));
-    } catch (e) {
-      console.error(e);
-      showStatus("error", "Failed to save brand.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const saveTimeline = async (ev: any) => {
-    setSaving(true);
-    try {
-      const id = ev.id || doc(collection(db, "timeline")).id;
-      await setDoc(doc(db, "timeline", id), ev, { merge: true });
-      showStatus("success", "Timeline event updated successfully.");
-      setEditingTimeline(null);
-      getTimeline().then(data => setTimeline(data || []));
-    } catch (e) {
-      console.error(e);
-      showStatus("error", "Failed to save timeline event.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
     <div className="space-y-8 pb-20">
       {statusBanner && (
@@ -291,7 +488,7 @@ export default function Admin() {
           <h1 className="text-4xl font-black gold-gradient">ADMIN COMMAND CENTER</h1>
           <p className="text-muted-foreground mt-1">Hello, MD Joy Hossen. Manage the Elite Ecosystem.</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <Button variant="outline" onClick={seedData} disabled={saving} className="gold-border gap-2">
             <Database className="w-4 h-4" />
             Seed Mock Data
@@ -303,7 +500,7 @@ export default function Admin() {
         </div>
       </div>
 
-      <Tabs defaultValue="general" className="w-full" onValueChange={setActiveTab}>
+      <Tabs value={activeTab} className="w-full" onValueChange={setActiveTab}>
         <TabsList className="bg-card border border-border p-1 h-auto flex-wrap mb-8">
           <TabsTrigger value="general" className="data-[state=active]:bg-primary data-[state=active]:text-black px-6 py-2 rounded-md font-bold uppercase text-[10px] tracking-widest">
             General
@@ -315,56 +512,139 @@ export default function Admin() {
             Core Brands
           </TabsTrigger>
           <TabsTrigger value="progress" className="data-[state=active]:bg-primary data-[state=active]:text-black px-6 py-2 rounded-md font-bold uppercase text-[10px] tracking-widest">
-            History
+            Milestones
           </TabsTrigger>
           <TabsTrigger value="timeline" className="data-[state=active]:bg-primary data-[state=active]:text-black px-6 py-2 rounded-md font-bold uppercase text-[10px] tracking-widest">
             Roadmap
           </TabsTrigger>
         </TabsList>
 
+        {/* General Tab */}
         <TabsContent value="general" className="space-y-6">
           <Card className="premium-card border-none">
             <CardHeader>
-              <CardTitle>Global Identity</CardTitle>
-              <CardDescription>Fundamental values and tracking metrics.</CardDescription>
+              <CardTitle>Global Identity & Metrics</CardTitle>
+              <CardDescription>Fundamental values and live dashboard KPIs.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-               <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-primary">Mission</label>
-                    <Input className="bg-muted border-none" defaultValue="Building Excellence..." />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-primary">Net Worth Goal</label>
-                    <Input className="bg-muted border-none" defaultValue="$12,450" />
-                  </div>
-               </div>
-               <Button className="gold-glow w-full" disabled={saving}>
-                 <Save className="w-4 h-4 mr-2" /> Commit Changes
-               </Button>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-primary">Title</label>
+                  <Input
+                    className="bg-muted border-none"
+                    value={siteConfig.title}
+                    onChange={(e) => setSiteConfig({ ...siteConfig, title: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-primary">Mission Status</label>
+                  <Input
+                    className="bg-muted border-none"
+                    value={siteConfig.status}
+                    onChange={(e) => setSiteConfig({ ...siteConfig, status: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-primary">Total Revenue ($)</label>
+                  <Input
+                    className="bg-muted border-none"
+                    value={siteConfig.totalRevenue}
+                    onChange={(e) => setSiteConfig({ ...siteConfig, totalRevenue: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-primary">Net Worth ($)</label>
+                  <Input
+                    className="bg-muted border-none"
+                    value={siteConfig.netWorth}
+                    onChange={(e) => setSiteConfig({ ...siteConfig, netWorth: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-primary">Growth Multiplier</label>
+                  <Input
+                    className="bg-muted border-none"
+                    value={siteConfig.multiplier}
+                    onChange={(e) => setSiteConfig({ ...siteConfig, multiplier: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-primary">Vision Statement</label>
+                  <Input
+                    className="bg-muted border-none"
+                    value={siteConfig.vision}
+                    onChange={(e) => setSiteConfig({ ...siteConfig, vision: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-primary">Core Mission</label>
+                <Textarea
+                  className="bg-muted border-none"
+                  value={siteConfig.mission}
+                  onChange={(e) => setSiteConfig({ ...siteConfig, mission: e.target.value })}
+                />
+              </div>
+              <Button className="gold-glow w-full" onClick={saveGeneralConfig} disabled={saving}>
+                <Save className="w-4 h-4 mr-2" /> Commit Changes
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Team Tab */}
         <TabsContent value="team" className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-bold">Leadership Command</h3>
-            <Button size="sm" className="gold-border" variant="outline">
+            <Button
+              size="sm"
+              className="gold-border"
+              variant="outline"
+              onClick={() => setEditingMember({ name: "", role: "", bio: "", image: "", initials: "", badgesText: "Elite", order: teamMembers.length + 1 })}
+            >
               <Plus className="w-4 h-4 mr-2" /> Add Elite Member
             </Button>
           </div>
+
+          {editingMember && (
+            <Card className="premium-card">
+              <CardHeader>
+                <CardTitle>{editingMember.id ? "Edit Leader" : "New Leadership Profile"}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input placeholder="Full Name" value={editingMember.name} onChange={e => setEditingMember({ ...editingMember, name: e.target.value })} />
+                  <Input placeholder="Role / Title" value={editingMember.role} onChange={e => setEditingMember({ ...editingMember, role: e.target.value })} />
+                  <Input placeholder="Portrait Image URL" value={editingMember.image} onChange={e => setEditingMember({ ...editingMember, image: e.target.value })} />
+                  <Input placeholder="Initials (e.g. JH)" value={editingMember.initials} onChange={e => setEditingMember({ ...editingMember, initials: e.target.value })} />
+                  <Input
+                    placeholder="Badges (comma-separated)"
+                    value={editingMember.badgesText !== undefined ? editingMember.badgesText : (editingMember.badges || []).join(", ")}
+                    onChange={e => setEditingMember({ ...editingMember, badgesText: e.target.value, badges: undefined })}
+                  />
+                  <Input type="number" placeholder="Order" value={editingMember.order} onChange={e => setEditingMember({ ...editingMember, order: parseInt(e.target.value) || 1 })} />
+                </div>
+                <Textarea placeholder="Biography" value={editingMember.bio} onChange={e => setEditingMember({ ...editingMember, bio: e.target.value })} />
+                <div className="flex gap-2">
+                  <Button className="gold-glow flex-1" onClick={() => saveMember(editingMember)} disabled={saving}>Save Leader</Button>
+                  <Button variant="ghost" onClick={() => setEditingMember(null)}>Cancel</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid md:grid-cols-2 gap-6">
             {teamMembers.map((member) => (
               <Card key={member.id} className="bg-card border-border">
                 <CardContent className="p-6 flex items-center gap-6">
-                  <img src={member.image} className="w-16 h-16 rounded-full object-cover gold-glow border-2 border-primary/20" alt={member.name} />
-                  <div className="flex-1">
-                    <p className="font-bold">{member.name}</p>
-                    <p className="text-xs text-primary uppercase tracking-widest">{member.role}</p>
+                  <img src={member.image} className="w-16 h-16 rounded-full object-cover gold-glow border-2 border-primary/20" alt={member.name} referrerPolicy="no-referrer" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold truncate">{member.name}</p>
+                    <p className="text-xs text-primary uppercase tracking-widest truncate">{member.role}</p>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary"><Edit className="w-4 h-4" /></Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-red-500"><Trash2 className="w-4 h-4" /></Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => setEditingMember(member)}><Edit className="w-4 h-4" /></Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-red-500" onClick={() => handleDeleteMember(member.id)} disabled={saving}><Trash2 className="w-4 h-4" /></Button>
                   </div>
                 </CardContent>
               </Card>
@@ -372,6 +652,7 @@ export default function Admin() {
           </div>
         </TabsContent>
 
+        {/* Brands Tab */}
         <TabsContent value="brands" className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-bold">Brand Portfolio</h3>
@@ -390,7 +671,7 @@ export default function Admin() {
                   <Input placeholder="Brand Name" value={editingBrand.name} onChange={e => setEditingBrand({...editingBrand, name: e.target.value})} />
                   <Input placeholder="Tagline" value={editingBrand.tagline} onChange={e => setEditingBrand({...editingBrand, tagline: e.target.value})} />
                   <Input placeholder="Image URL" value={editingBrand.image} onChange={e => setEditingBrand({...editingBrand, image: e.target.value})} />
-                  <Input type="number" placeholder="Order" value={editingBrand.order} onChange={e => setEditingBrand({...editingBrand, order: parseInt(e.target.value)})} />
+                  <Input type="number" placeholder="Order" value={editingBrand.order} onChange={e => setEditingBrand({...editingBrand, order: parseInt(e.target.value) || 1})} />
                 </div>
                 <Textarea placeholder="Description" value={editingBrand.desc} onChange={e => setEditingBrand({...editingBrand, desc: e.target.value})} />
                 <div className="flex gap-2">
@@ -404,13 +685,13 @@ export default function Admin() {
           <div className="grid lg:grid-cols-3 gap-6">
             {brands.map((brand) => (
               <Card key={brand.id} className="bg-card border-border overflow-hidden">
-                <img src={brand.image} className="w-full h-32 object-cover grayscale-[0.5]" alt={brand.name} />
+                <img src={brand.image} className="w-full h-32 object-cover grayscale-[0.5]" alt={brand.name} referrerPolicy="no-referrer" />
                 <CardContent className="p-4 space-y-2">
                   <p className="text-[10px] text-primary font-bold uppercase tracking-widest">{brand.tagline}</p>
                   <p className="font-bold">{brand.name}</p>
                   <div className="flex justify-end gap-2 pt-2 border-t border-border mt-4">
                     <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => setEditingBrand(brand)}><Edit className="w-4 h-4" /></Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-red-500"><Trash2 className="w-4 h-4" /></Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-red-500" onClick={() => handleDeleteBrand(brand.id)} disabled={saving}><Trash2 className="w-4 h-4" /></Button>
                   </div>
                 </CardContent>
               </Card>
@@ -418,12 +699,79 @@ export default function Admin() {
           </div>
         </TabsContent>
 
-        <TabsContent value="progress" className="p-12 text-center border border-dashed border-border rounded-xl">
-           <TrendingUp className="w-12 h-12 text-primary mx-auto mb-4" />
-           <p className="font-bold">Operational Milestones</p>
-           <p className="text-sm text-muted-foreground">Strategic objectives and mission progress telemetry.</p>
-           {/* Milestone management components would go here */}
+        {/* Milestones Tab */}
+        <TabsContent value="progress" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-bold">Operational Milestones</h3>
+            <Button
+              size="sm"
+              className="gold-border"
+              variant="outline"
+              onClick={() => setEditingMilestone({ title: "", description: "", date: "", completed: false, order: milestones.length + 1 })}
+            >
+              <Plus className="w-4 h-4 mr-2" /> Add Milestone
+            </Button>
+          </div>
+
+          {editingMilestone && (
+            <Card className="premium-card">
+              <CardHeader>
+                <CardTitle>{editingMilestone.id ? "Edit Milestone" : "New Milestone"}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <Input placeholder="Milestone Title" value={editingMilestone.title} onChange={e => setEditingMilestone({ ...editingMilestone, title: e.target.value })} />
+                  <Input placeholder="Target Date (e.g. Sept 2026)" value={editingMilestone.date} onChange={e => setEditingMilestone({ ...editingMilestone, date: e.target.value })} />
+                  <Input type="number" placeholder="Order" value={editingMilestone.order} onChange={e => setEditingMilestone({ ...editingMilestone, order: parseInt(e.target.value) || 1 })} />
+                </div>
+                <Textarea placeholder="Description" value={editingMilestone.description} onChange={e => setEditingMilestone({ ...editingMilestone, description: e.target.value })} />
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editingMilestone.completed)}
+                    onChange={e => setEditingMilestone({ ...editingMilestone, completed: e.target.checked })}
+                  />
+                  <span>Mark as Completed</span>
+                </label>
+                <div className="flex gap-2">
+                  <Button className="gold-glow flex-1" onClick={() => handleSaveMilestone(editingMilestone)} disabled={saving}>Save Milestone</Button>
+                  <Button variant="ghost" onClick={() => setEditingMilestone(null)}>Cancel</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {milestones.map((ms) => (
+              <Card key={ms.id} className="bg-card border-border">
+                <CardContent className="p-6 flex items-center justify-between gap-4">
+                  <button
+                    onClick={() => toggleMilestoneStatus(ms)}
+                    className="flex items-center gap-4 text-left flex-1 group"
+                    disabled={saving}
+                  >
+                    {ms.completed ? (
+                      <CheckCircle2 className="w-6 h-6 text-primary shrink-0" />
+                    ) : (
+                      <Circle className="w-6 h-6 text-muted-foreground group-hover:text-primary shrink-0" />
+                    )}
+                    <div>
+                      <p className="font-bold">{ms.title}</p>
+                      <p className="text-xs text-muted-foreground">{ms.description}</p>
+                      {ms.date && <p className="text-[10px] text-primary uppercase font-bold mt-1">{ms.date}</p>}
+                    </div>
+                  </button>
+                  <div className="flex gap-2">
+                    <Button size="icon" variant="ghost" onClick={() => setEditingMilestone(ms)}><Edit className="w-4 h-4" /></Button>
+                    <Button size="icon" variant="ghost" className="text-red-500" onClick={() => handleDeleteMilestone(ms.id)} disabled={saving}><Trash2 className="w-4 h-4" /></Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
+
+        {/* Timeline Tab */}
         <TabsContent value="timeline" className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-bold">Operational Roadmap</h3>
@@ -472,7 +820,7 @@ export default function Admin() {
                   </div>
                   <div className="flex gap-2">
                     <Button size="icon" variant="ghost" onClick={() => setEditingTimeline(ev)}><Edit className="w-4 h-4" /></Button>
-                    <Button size="icon" variant="ghost" className="text-red-500"><Trash2 className="w-4 h-4" /></Button>
+                    <Button size="icon" variant="ghost" className="text-red-500" onClick={() => handleDeleteTimeline(ev.id)} disabled={saving}><Trash2 className="w-4 h-4" /></Button>
                   </div>
                 </CardContent>
               </Card>

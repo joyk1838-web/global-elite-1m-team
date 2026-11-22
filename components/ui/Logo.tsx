@@ -9,11 +9,11 @@ interface LogoProps {
 
 export function Logo({ className, size = "md" }: LogoProps) {
   const [error, setError] = useState(false);
-  
+
   const sizes = {
-    sm: "w-10 h-10",
-    md: "w-12 h-12",
-    lg: "w-24 h-24"
+    sm: "w-10 h-10 p-1 rounded-lg",
+    md: "w-12 h-12 p-1 rounded-xl",
+    lg: "w-28 h-28 p-2 rounded-2xl"
   };
 
   const iconSizes = {
@@ -24,18 +24,17 @@ export function Logo({ className, size = "md" }: LogoProps) {
 
   return (
     <div className={cn(
-      "flex items-center justify-center rounded-lg gold-border gold-glow overflow-hidden transition-all duration-500",
-      error ? "bg-primary" : "bg-primary/10",
+      "flex items-center justify-center gold-border gold-glow overflow-hidden transition-all duration-500",
+      error ? "bg-primary" : "bg-white",
       sizes[size],
       className
     )}>
       {!error ? (
-        <img 
-          src="https://lh3.googleusercontent.com/d/1rkUbrNUsvfw6LRuVTWZ3TOA10Hn-ExJL" 
-          alt="Elite Group" 
+        <img
+          src="/assets/aistudio/IMG_8702_c83b4115.png"
+          alt="ELITE 1M Official Logo"
           className="w-full h-full object-contain"
           onError={() => setError(true)}
-          referrerPolicy="no-referrer"
         />
       ) : (
         <Crown size={iconSizes[size]} className="text-black animate-pulse" />
