@@ -149,10 +149,10 @@ export default function Footer() {
                   {config.mission}
                 </p>
                 <Link
-                  to="/admin"
+                  to="/vision"
                   className="inline-flex items-center gap-1.5 text-primary hover:underline font-medium"
                 >
-                  Admin Portal
+                  Explore Vision 2030
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </Link>
               </div>

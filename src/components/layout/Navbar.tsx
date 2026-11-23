@@ -1,10 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Lock } from "lucide-react";
+import { Menu, X, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import { useSiteConfig } from "../../context/SiteContext";
+import { useExecutiveChat } from "../../context/ChatContext";
 
 const navItems = [
   { path: "/", label: "Home" },
@@ -18,6 +19,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { pathname } = useLocation();
   const { config } = useSiteConfig();
+  const { openChat } = useExecutiveChat();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass-nav">
@@ -58,18 +60,14 @@ export default function Navbar() {
 
         {/* Zone 3: Single Executive Action */}
         <div className="hidden md:flex items-center shrink-0">
-          <Link
-            to="/admin"
-            className={cn(
-              "inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all whitespace-nowrap shrink-0 border",
-              pathname === "/admin"
-                ? "bg-primary text-primary-foreground border-primary"
-                : "border-white/15 bg-white/[0.03] text-zinc-200 hover:border-primary/50 hover:text-primary"
-            )}
+          <button
+            type="button"
+            onClick={() => openChat()}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium tracking-wide transition-all whitespace-nowrap shrink-0 border border-white/15 bg-white/[0.03] text-zinc-200 hover:border-primary/50 hover:text-primary cursor-pointer"
           >
-            <Lock className="w-3.5 h-3.5" />
-            Admin Portal
-          </Link>
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            Ask Strategist
+          </button>
         </div>
 
         {/* Mobile Nav Toggle */}
@@ -136,14 +134,17 @@ export default function Navbar() {
                 Roadmap
               </Link>
               <div className="h-px bg-white/10 my-2" />
-              <Link
-                to="/admin"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold text-primary border border-primary/35 hover:bg-primary/10"
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  openChat();
+                }}
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold text-primary border border-primary/35 hover:bg-primary/10 cursor-pointer"
               >
-                <Lock className="w-4 h-4" />
-                Admin Portal
-              </Link>
+                <Sparkles className="w-4 h-4" />
+                Ask Strategist
+              </button>
             </div>
           </motion.div>
         )}

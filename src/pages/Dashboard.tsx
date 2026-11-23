@@ -1,291 +1,842 @@
-import { motion } from "framer-motion";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
-import { TrendingUp, Target, CreditCard, Landmark, CheckCircle2, Circle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  Cell,
+} from "recharts";
+import {
+  TrendingUp,
+  Target,
+  CreditCard,
+  Landmark,
+  CheckCircle2,
+  Circle,
+  ArrowUpRight,
+} from "lucide-react";
 import { getGrowthData, getMilestones } from "../services/firebase";
 import { useSiteConfig } from "../context/SiteContext";
-import { DEFAULT_GROWTH, DEFAULT_MILESTONES, SERIES_ONE_ASSETS } from "../lib/defaults";
+import { useExecutiveChat } from "../context/ChatContext";
+import {
+  DEFAULT_GROWTH,
+  DEFAULT_MILESTONES,
+  LOCAL_ASSETS,
+  SERIES_ONE_ASSETS,
+} from "../lib/defaults";
+import { AnimatedCounter } from "../components/motion/AnimatedCounter";
+import { SpotlightCard } from "../components/motion/SpotlightCard";
+import {
+  EASE_OUT_EXPO,
+  MiniSparkline,
+  RadialProgressRing,
+  SCROLL_VIEWPORT,
+  TextMaskReveal,
+} from "../components/motion/MotionPrimitives";
 
-const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
+type TimeframeOption = "all" | "6m" | "3m";
+type ChartMode = "monthly" | "cumulative" | "bars";
+type MilestoneFilter = "all" | "completed" | "upcoming";
 
-const PHASE_BENCHMARKS = [
-  { phase: "Start", target: 1000, current: 1000 },
-  { phase: "Foundation", target: 10000, current: 8500 },
-  { phase: "Growth", target: 100000, current: 0 },
-  { phase: "Expansion", target: 500000, current: 0 },
-  { phase: "Target", target: 1000000, current: 0 },
+interface RevenuePoint {
+  name: string;
+  amount: number;
+  cumulative: number;
+  deltaPct: number | null;
+}
+
+const SCALING_TIERS = [
+  { phase: "01. Start", target: 1000, note: "Initial validation" },
+  { phase: "02. Foundation", target: 10000, note: "Operating base" },
+  { phase: "03. Growth", target: 100000, note: "Multi-venture scale" },
+  { phase: "04. Expansion", target: 500000, note: "Regional corridors" },
+  { phase: "05. Target", target: 1000000, note: "2030 $1M objective" },
 ];
+
+function CustomChartTooltip({
+  active,
+  payload,
+  label,
+  chartMode,
+}: {
+  active?: boolean;
+  payload?: Array<{ value: number; payload: RevenuePoint }>;
+  label?: string;
+  chartMode: ChartMode;
+}) {
+  if (!active || !payload || payload.length === 0) return null;
+  const item = payload[0];
+  const val = Number(item.value || 0);
+  const delta = item.payload?.deltaPct;
+
+  return (
+    <div className="rounded-xl border border-primary/35 bg-[#0d0d12]/95 backdrop-blur-md px-4 py-3 shadow-2xl space-y-1">
+      <p className="text-xs font-medium text-zinc-400">
+        {label} · {chartMode === "cumulative" ? "Cumulative Equity" : "Period Revenue"}
+      </p>
+      <p className="font-mono text-lg font-semibold text-zinc-50 tabular-nums">
+        ${val.toLocaleString("en-US")}
+      </p>
+      {delta !== null && chartMode !== "cumulative" && (
+        <p
+          className={`font-mono text-xs tabular-nums ${
+            delta >= 0 ? "text-primary" : "text-rose-400"
+          }`}
+        >
+          {delta >= 0 ? "+" : ""}
+          {delta.toFixed(1)}% vs prior period
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { config } = useSiteConfig();
-  const [revenueData, setRevenueData] = useState<any[]>(
-    DEFAULT_GROWTH.map((g) => ({ name: g.month, amount: g.amount }))
+  const { openChat } = useExecutiveChat();
+
+  const [rawRevenue, setRawRevenue] = useState<Array<{ name: string; amount: number }>>(
+    DEFAULT_GROWTH.map((g) => ({ name: g.month, amount: Number(g.amount) || 0 }))
   );
   const [milestones, setMilestones] = useState<any[]>(DEFAULT_MILESTONES);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [timeframe, setTimeframe] = useState<TimeframeOption>("all");
+  const [chartMode, setChartMode] = useState<ChartMode>("monthly");
+  const [milestoneFilter, setMilestoneFilter] = useState<MilestoneFilter>("all");
+  const [activeSeriesSlide, setActiveSeriesSlide] = useState(0);
 
   useEffect(() => {
+    let active = true;
     const fetchData = async () => {
       try {
         const [gData, mData] = await Promise.all([getGrowthData(), getMilestones()]);
+        if (!active) return;
         if (gData && gData.length > 0) {
-          setRevenueData(gData.map((d: any) => ({ name: d.month, amount: d.amount })));
+          setRawRevenue(
+            gData.map((d: any) => ({
+              name: String(d.month || ""),
+              amount: Number(d.amount) || 0,
+            }))
+          );
         }
         if (mData && mData.length > 0) {
           setMilestones(mData);
         }
       } catch (e) {
         console.warn("Using default progress metrics", e);
+      } finally {
+        if (active) setIsLoading(false);
       }
     };
     fetchData();
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const numericNetWorth = parseFloat(String(config.netWorth || "12450").replace(/,/g, "")) || 12450;
-  const phaseBenchmarks = PHASE_BENCHMARKS.map((item, idx) => {
-    if (idx === 1) {
-      return { ...item, current: Math.min(item.target, numericNetWorth) };
-    }
-    return item;
-  });
+  const enrichedSeries = useMemo<RevenuePoint[]>(() => {
+    let running = 0;
+    const full = rawRevenue.map((pt, idx) => {
+      running += pt.amount;
+      const prev = idx > 0 ? rawRevenue[idx - 1].amount : 0;
+      const deltaPct = idx > 0 && prev > 0 ? ((pt.amount - prev) / prev) * 100 : null;
+      return {
+        name: pt.name,
+        amount: pt.amount,
+        cumulative: running,
+        deltaPct,
+      };
+    });
+
+    if (timeframe === "6m") return full.slice(-6);
+    if (timeframe === "3m") return full.slice(-3);
+    return full;
+  }, [rawRevenue, timeframe]);
+
+  const numericNetWorth =
+    parseFloat(String(config.netWorth || "12450").replace(/,/g, "")) || 12450;
+  const numericTarget =
+    parseFloat(String(config.valuationTarget || "1000000").replace(/,/g, "")) || 1000000;
+  const overallProgressPct = Math.min(100, Math.max(0.1, (numericNetWorth / numericTarget) * 100));
+
+  const nextTier =
+    SCALING_TIERS.find((t) => numericNetWorth < t.target) ||
+    SCALING_TIERS[SCALING_TIERS.length - 1];
+  const nextTierPct = Math.min(100, Math.round((numericNetWorth / nextTier.target) * 100));
+  const amountToNextTier = Math.max(0, nextTier.target - numericNetWorth);
+
+  const latestPoint = enrichedSeries[enrichedSeries.length - 1];
+  const latestDeltaStr =
+    latestPoint?.deltaPct !== null && latestPoint?.deltaPct !== undefined
+      ? `${latestPoint.deltaPct >= 0 ? "+" : ""}${latestPoint.deltaPct.toFixed(1)}% latest period`
+      : "Cumulative reported";
+
+  const filteredMilestones = useMemo(() => {
+    if (milestoneFilter === "completed") return milestones.filter((m) => Boolean(m.completed));
+    if (milestoneFilter === "upcoming") return milestones.filter((m) => !m.completed);
+    return milestones;
+  }, [milestones, milestoneFilter]);
+
+  const completedCount = milestones.filter((m) => Boolean(m.completed)).length;
+  const chartDataKey = chartMode === "cumulative" ? "cumulative" : "amount";
 
   return (
-    <div className="space-y-12 pb-16">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-white/10 pb-8">
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
-            Performance Overview
+    <div className="space-y-10 pb-20">
+      {/* Header + Working Timeframe Switcher */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-white/[0.08] pb-8">
+        <div className="space-y-2.5 max-w-2xl">
+          <p className="text-xs font-medium uppercase tracking-[0.22em] text-primary">
+            Performance Overview · {config.status || "Foundation"} Phase
           </p>
-          <h1 className="font-heading text-4xl md:text-5xl font-semibold tracking-tight gold-gradient">
-            Progress Dashboard
+          <h1 className="font-heading text-4xl sm:text-5xl font-semibold tracking-tight gold-gradient">
+            <TextMaskReveal immediate delay={0.04}>
+              Progress Dashboard
+            </TextMaskReveal>
           </h1>
-          <p className="text-sm md:text-base text-zinc-400">
-            Tracking operational growth and milestones toward the ${config.valuationTarget || "1,000,000"} objective.
+          <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+            Real-time capital progression, revenue velocity, and verified milestones toward our $
+            {config.valuationTarget || "1,000,000"} objective.
           </p>
         </div>
-        <p className="text-xs font-medium text-zinc-400">
-          Current Stage: <span className="text-primary font-semibold">{config.status}</span>
-        </p>
-      </div>
 
-      {/* KPI Cards */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {[
-          { label: "Total Revenue", value: `$${config.totalRevenue}`, note: "Cumulative reported", icon: CreditCard },
-          { label: "Net Worth", value: `$${config.netWorth}`, note: "Verified capital base", icon: Landmark },
-          { label: "Growth Multiplier", value: `x${config.multiplier}`, note: "Period expansion rate", icon: TrendingUp },
-          { label: "Mission Phase", value: config.status, note: "2030 roadmap status", icon: Target },
-        ].map((stat, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: i * 0.06, ease: EASE_OUT_EXPO }}
-          >
-            <Card className="surface-card border-white/10">
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-zinc-400">{stat.label}</span>
-                  <stat.icon className="w-4 h-4 text-primary" />
-                </div>
-                <div>
-                  <p className="font-mono text-2xl md:text-3xl font-semibold text-zinc-100 tabular-nums">
-                    {stat.value}
-                  </p>
-                  <p className="text-xs text-zinc-500 mt-1">{stat.note}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Series 01 Active Project Banner ($600 -> $5K) */}
-      <Card className="surface-card border-white/10 overflow-hidden">
-        <div className="grid lg:grid-cols-12 items-center">
-          <div className="lg:col-span-5 p-6 sm:p-8 space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-              Series 01 · Active Challenge
-            </p>
-            <h2 className="font-heading text-2xl sm:text-3xl font-semibold text-zinc-100">
-              $600 → $5K Live Trading Project
-            </h2>
-            <p className="text-sm text-zinc-400 leading-relaxed">
-              সহজ বাংলায় ট্রেডিং শিক্ষা — নিয়ম মেনে $600 থেকে $5,000 লক্ষ্যে রিস্ক ম্যানেজমেন্ট, ট্রেডিং সাইকোলজি এবং প্রফেশনাল মাইন্ডসেট ভিত্তিক প্রজেক্ট।
-            </p>
-            <div className="grid grid-cols-3 gap-4 pt-3 border-t border-white/10">
-              <div>
-                <p className="font-mono text-xl font-semibold text-zinc-100 tabular-nums">$600</p>
-                <p className="text-[11px] text-zinc-500">Start</p>
-              </div>
-              <div>
-                <p className="font-mono text-xl font-semibold text-primary tabular-nums">$5,000</p>
-                <p className="text-[11px] text-zinc-500">Target</p>
-              </div>
-              <div>
-                <p className="font-mono text-xl font-semibold text-zinc-100 tabular-nums">8.3x</p>
-                <p className="text-[11px] text-zinc-500">Multiplier</p>
-              </div>
-            </div>
-          </div>
-          <div className="lg:col-span-7 grid sm:grid-cols-2 gap-3 p-4 sm:p-6 bg-black/30">
-            {SERIES_ONE_ASSETS.map((item) => (
-              <div
-                key={item.id}
-                className="aspect-video rounded-xl overflow-hidden border border-white/10 bg-black"
+        {/* Interactive Timeframe Control */}
+        <div
+          className="inline-flex items-center gap-1 p-1 rounded-xl border border-white/10 bg-[#0b0b0f] self-start lg:self-auto"
+          role="tablist"
+          aria-label="Chart timeframe filter"
+        >
+          {(
+            [
+              { id: "all", label: "All Periods" },
+              { id: "6m", label: "Last 6 Months" },
+              { id: "3m", label: "Last 3 Months" },
+            ] as const
+          ).map((tab) => {
+            const isSelected = timeframe === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isSelected}
+                onClick={() => setTimeframe(tab.id)}
+                className={`relative px-3.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
+                  isSelected ? "text-zinc-950" : "text-zinc-400 hover:text-zinc-100"
+                }`}
               >
-                <img
-                  src={item.url}
-                  alt={item.title}
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-            ))}
-          </div>
+                {isSelected && (
+                  <motion.span
+                    layoutId="dash-timeframe-pill"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    className="absolute inset-0 rounded-lg bg-primary"
+                    aria-hidden="true"
+                  />
+                )}
+                <span className="relative z-10">{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
-      </Card>
-
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Monthly Revenue Chart */}
-        <Card className="lg:col-span-2 surface-card border-white/10">
-          <CardHeader>
-            <CardTitle className="font-heading text-2xl font-semibold">Monthly Revenue Growth</CardTitle>
-            <CardDescription className="text-zinc-400">
-              Chronological revenue progression managed via the Admin Portal
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="h-[360px] w-full pt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData}>
-                <defs>
-                  <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#d4af37" stopOpacity={0.28} />
-                    <stop offset="95%" stopColor="#d4af37" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
-                <XAxis
-                  dataKey="name"
-                  stroke="#71717a"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="#71717a"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `$${value}`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#111114",
-                    border: "1px solid rgba(212,175,55,0.35)",
-                    borderRadius: "10px",
-                    fontSize: "12px",
-                  }}
-                  itemStyle={{ color: "#d4af37" }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="#d4af37"
-                  strokeWidth={2.5}
-                  fillOpacity={1}
-                  fill="url(#colorAmount)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Active Milestones */}
-        <Card className="surface-card border-white/10">
-          <CardHeader>
-            <CardTitle className="font-heading text-2xl font-semibold">Key Milestones</CardTitle>
-            <CardDescription className="text-zinc-400">
-              Verified checkpoints toward $1M scale
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-5">
-              {milestones.map((ms, i) => (
-                <div key={ms.id || i} className="flex gap-3.5 group">
-                  <div className="relative pt-0.5">
-                    {ms.completed ? (
-                      <CheckCircle2 className="w-5 h-5 text-primary" />
-                    ) : (
-                      <Circle className="w-5 h-5 text-zinc-600" />
-                    )}
-                    {i !== milestones.length - 1 && (
-                      <div className="absolute top-6 left-2.5 w-px h-10 bg-white/10" />
-                    )}
-                  </div>
-                  <div className="space-y-1 pb-4">
-                    <h4 className={`text-sm font-semibold leading-none ${ms.completed ? "text-zinc-100" : "text-zinc-400"}`}>
-                      {ms.title}
-                    </h4>
-                    <p className="text-xs text-zinc-400 leading-relaxed">{ms.description}</p>
-                    {ms.date && (
-                      <p className="text-[11px] font-mono text-primary/80">{ms.date}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
-      {/* Phase Capital Roadmap */}
-      <Card className="surface-card border-white/10">
-        <CardHeader>
-          <CardTitle className="font-heading text-2xl font-semibold">Capital Scaling Benchmarks</CardTitle>
-          <CardDescription className="text-zinc-400">
-            Stage-by-stage target progression from foundation to $1M valuation
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="h-[280px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={phaseBenchmarks}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
-              <XAxis dataKey="phase" stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="#71717a" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v / 1000}k`} />
-              <Tooltip
-                cursor={{ fill: "rgba(212, 175, 55, 0.05)" }}
-                contentStyle={{
-                  backgroundColor: "#111114",
-                  border: "1px solid rgba(212,175,55,0.35)",
-                  borderRadius: "10px",
-                  fontSize: "12px",
-                }}
+      {/* Primary Analytics Bento: Valuation Radial Ring (5 cols) + 2x2 KPI Grid (7 cols) */}
+      <div className="grid lg:grid-cols-12 gap-6 items-stretch">
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.65, ease: EASE_OUT_EXPO }}
+          className="lg:col-span-5 h-full"
+        >
+          <SpotlightCard active className="p-7 sm:p-8 h-full flex flex-col justify-between gap-7">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+                  2030 North Star
+                </p>
+                <h2 className="font-heading text-2xl font-semibold text-zinc-50">
+                  Valuation Trajectory
+                </h2>
+              </div>
+              <span className="font-mono text-xs text-zinc-400 tabular-nums">
+                Target ${numericTarget.toLocaleString("en-US")}
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-7 py-2">
+              <RadialProgressRing
+                percent={Math.max(4, overallProgressPct)}
+                size={156}
+                strokeWidth={10}
+                label={`${overallProgressPct.toFixed(2)}%`}
+                sublabel="of $1M goal"
               />
-              <Bar dataKey="target" name="Target" radius={[6, 6, 0, 0]}>
-                {phaseBenchmarks.map((_, index) => (
-                  <Cell key={`target-${index}`} fill="#d4af37" opacity={0.25} />
-                ))}
-              </Bar>
-              <Bar dataKey="current" name="Current" radius={[6, 6, 0, 0]}>
-                {phaseBenchmarks.map((_, index) => (
-                  <Cell key={`current-${index}`} fill="#d4af37" />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-        <div className="px-6 pb-6 flex justify-center gap-8 text-xs font-medium text-zinc-400">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-primary rounded-sm" />
-            <span>Current Achieved</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-primary/25 rounded-sm" />
-            <span>Phase Target</span>
-          </div>
+
+              <div className="flex-1 w-full space-y-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-zinc-400">Current Verified Equity</p>
+                  <p className="font-mono text-3xl font-semibold text-zinc-50 tabular-nums">
+                    <AnimatedCounter value={config.netWorth || "12,450"} prefix="$" />
+                  </p>
+                </div>
+
+                <div className="space-y-2 pt-3 border-t border-white/[0.08]">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-400">Next Tier: {nextTier.phase}</span>
+                    <span className="font-mono text-primary tabular-nums">{nextTierPct}%</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-white/[0.08] overflow-hidden">
+                    <motion.div
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{ duration: 1.2, ease: EASE_OUT_EXPO }}
+                      style={{ width: `${nextTierPct}%` }}
+                      className="h-full origin-left rounded-full bg-gradient-to-r from-primary/70 via-primary to-[#f3df9b]"
+                    />
+                  </div>
+                  <p className="font-mono text-[11px] text-zinc-500 tabular-nums">
+                    ${amountToNextTier.toLocaleString("en-US")} remaining to $
+                    {nextTier.target.toLocaleString("en-US")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </SpotlightCard>
+        </motion.div>
+
+        {/* 2x2 KPI Cards with Live Animated Sparklines */}
+        <div className="lg:col-span-7 grid sm:grid-cols-2 gap-5">
+          {[
+            {
+              label: "Total Revenue",
+              raw: config.totalRevenue || "7,200",
+              prefix: "$",
+              note: latestDeltaStr,
+              icon: CreditCard,
+              sparkValues: enrichedSeries.map((d) => d.amount),
+              highlight: true,
+            },
+            {
+              label: "Verified Net Worth",
+              raw: config.netWorth || "12,450",
+              prefix: "$",
+              note: "Accumulated capital base",
+              icon: Landmark,
+              sparkValues: enrichedSeries.map((d) => d.cumulative),
+              highlight: false,
+            },
+            {
+              label: "Growth Multiplier",
+              raw: config.multiplier || "4.2",
+              prefix: "x",
+              note: "Compounding period velocity",
+              icon: TrendingUp,
+              sparkValues: null,
+              highlight: false,
+            },
+            {
+              label: "Series 01 Objective",
+              raw: "$600 → $5K",
+              prefix: "",
+              note: "8.3x Rule-based challenge",
+              icon: Target,
+              isText: true,
+              sparkValues: null,
+              highlight: false,
+            },
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.55, delay: 0.06 + i * 0.06, ease: EASE_OUT_EXPO }}
+              className="h-full"
+            >
+              <SpotlightCard
+                active={stat.highlight}
+                className="p-6 h-full flex flex-col justify-between gap-4"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs font-medium text-zinc-400">{stat.label}</span>
+                  <stat.icon className="w-4 h-4 text-primary shrink-0" />
+                </div>
+
+                <div className="space-y-1">
+                  <p className="font-mono text-2xl sm:text-3xl font-semibold text-zinc-50 tabular-nums">
+                    {stat.isText ? (
+                      stat.raw
+                    ) : (
+                      <AnimatedCounter value={stat.raw} prefix={stat.prefix} />
+                    )}
+                  </p>
+                  <p className="text-xs text-zinc-500">{stat.note}</p>
+                </div>
+
+                {stat.sparkValues ? (
+                  <div className="pt-1">
+                    <MiniSparkline values={stat.sparkValues} />
+                  </div>
+                ) : (
+                  <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs">
+                    <span className="text-zinc-500">
+                      {stat.isText ? "Live Execution" : "Status"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openChat(
+                          stat.isText
+                            ? "Brief me on our Series 01 $600 to $5K challenge metrics."
+                            : "Analyze our current growth multiplier and revenue trajectory."
+                        )
+                      }
+                      className="inline-flex items-center gap-1 text-primary hover:underline cursor-pointer whitespace-nowrap shrink-0"
+                    >
+                      Briefing
+                      <ArrowUpRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+              </SpotlightCard>
+            </motion.div>
+          ))}
         </div>
-      </Card>
+      </div>
+
+      {/* Main Revenue Visualization with Mode Switcher & Skeleton Loading */}
+      <motion.div
+        initial={{ opacity: 0, y: 22 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={SCROLL_VIEWPORT}
+        transition={{ duration: 0.65, ease: EASE_OUT_EXPO }}
+      >
+        <SpotlightCard tilt={false} className="p-6 sm:p-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.07] pb-5">
+            <div className="space-y-1">
+              <h2 className="font-heading text-2xl font-semibold text-zinc-50">
+                Revenue & Capital Progression
+              </h2>
+              <p className="text-xs sm:text-sm text-zinc-400">
+                Chronological enterprise revenue progression across recorded periods
+              </p>
+            </div>
+
+            <div
+              className="inline-flex items-center gap-1 p-1 rounded-xl border border-white/10 bg-[#07070a] self-start sm:self-auto"
+              role="tablist"
+              aria-label="Chart visualization mode"
+            >
+              {(
+                [
+                  { id: "monthly", label: "Monthly" },
+                  { id: "cumulative", label: "Cumulative" },
+                  { id: "bars", label: "Comparison" },
+                ] as const
+              ).map((mode) => {
+                const isActive = chartMode === mode.id;
+                return (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setChartMode(mode.id)}
+                    className={`relative px-3.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
+                      isActive ? "text-zinc-950" : "text-zinc-400 hover:text-zinc-100"
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.span
+                        layoutId="dash-chart-mode"
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                        className="absolute inset-0 rounded-lg bg-primary"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span className="relative z-10">{mode.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="h-[340px] w-full rounded-xl bg-white/[0.03] animate-pulse" />
+          ) : enrichedSeries.length === 0 ? (
+            <div className="h-[340px] flex flex-col items-center justify-center text-center gap-3">
+              <p className="text-sm text-zinc-400">No revenue records available for this window.</p>
+              <button
+                type="button"
+                onClick={() => setTimeframe("all")}
+                className="px-4 py-2 rounded-lg bg-primary text-zinc-950 text-xs font-semibold cursor-pointer"
+              >
+                Show All Periods
+              </button>
+            </div>
+          ) : (
+            <div className="h-[340px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                {chartMode === "bars" ? (
+                  <BarChart data={enrichedSeries}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="rgba(255,255,255,0.06)"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      stroke="#71717a"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      stroke="#71717a"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `$${value}`}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "rgba(226, 190, 83, 0.06)" }}
+                      content={<CustomChartTooltip chartMode={chartMode} />}
+                    />
+                    <Bar dataKey="amount" radius={[6, 6, 0, 0]} maxBarSize={52}>
+                      {enrichedSeries.map((_, index) => (
+                        <Cell
+                          key={`bar-${index}`}
+                          fill={index === enrichedSeries.length - 1 ? "#f3df9b" : "#e2be53"}
+                          fillOpacity={0.35 + ((index + 1) / enrichedSeries.length) * 0.65}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                ) : (
+                  <AreaChart data={enrichedSeries}>
+                    <defs>
+                      <linearGradient id="dashGoldArea" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#e2be53" stopOpacity={0.32} />
+                        <stop offset="95%" stopColor="#e2be53" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="rgba(255,255,255,0.06)"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      stroke="#71717a"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      stroke="#71717a"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `$${value.toLocaleString("en-US")}`}
+                    />
+                    <Tooltip content={<CustomChartTooltip chartMode={chartMode} />} />
+                    <Area
+                      type="monotone"
+                      dataKey={chartDataKey}
+                      stroke="#e2be53"
+                      strokeWidth={2.5}
+                      fillOpacity={1}
+                      fill="url(#dashGoldArea)"
+                      activeDot={{
+                        r: 5,
+                        fill: "#f3df9b",
+                        stroke: "#050507",
+                        strokeWidth: 2,
+                      }}
+                    />
+                  </AreaChart>
+                )}
+              </ResponsiveContainer>
+            </div>
+          )}
+        </SpotlightCard>
+      </motion.div>
+
+      {/* Series 01 Active Project Showcase ($600 -> $5K) */}
+      <motion.div
+        initial={{ opacity: 0, y: 22 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={SCROLL_VIEWPORT}
+        transition={{ duration: 0.65, ease: EASE_OUT_EXPO }}
+      >
+        <SpotlightCard active tilt={false} className="overflow-hidden">
+          <div className="grid lg:grid-cols-12 items-stretch">
+            <div className="lg:col-span-5 p-7 sm:p-9 flex flex-col justify-between gap-6">
+              <div className="space-y-3">
+                <p className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
+                  Series 01 · Active Challenge
+                </p>
+                <h2 className="font-heading text-2xl sm:text-3xl font-semibold text-zinc-50 leading-snug">
+                  $600 → $5K Live Trading Project
+                </h2>
+                <p className="text-sm text-zinc-400 leading-relaxed">
+                  সহজ বাংলায় ট্রেডিং শিক্ষা — নিয়ম মেনে $600 থেকে $5,000 লক্ষ্যে রিস্ক ম্যানেজমেন্ট, ট্রেডিং সাইকোলজি এবং প্রফেশনাল মাইন্ডসেট ভিত্তিক প্রজেক্ট।
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4 py-4 border-y border-white/[0.08]">
+                  <div>
+                    <p className="font-mono text-xl font-semibold text-zinc-100 tabular-nums">
+                      $600
+                    </p>
+                    <p className="text-[11px] text-zinc-500">শুরু · Start</p>
+                  </div>
+                  <div>
+                    <p className="font-mono text-xl font-semibold text-primary tabular-nums">
+                      $5,000
+                    </p>
+                    <p className="text-[11px] text-zinc-500">লক্ষ্য · Target</p>
+                  </div>
+                  <div>
+                    <p className="font-mono text-xl font-semibold text-zinc-100 tabular-nums">
+                      8.3x
+                    </p>
+                    <p className="text-[11px] text-zinc-500">Multiplier</p>
+                  </div>
+                </div>
+
+                {/* Interactive Slide Selector */}
+                <div className="flex flex-wrap gap-2">
+                  {SERIES_ONE_ASSETS.map((item, idx) => {
+                    const active = idx === activeSeriesSlide;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setActiveSeriesSlide(idx)}
+                        className={`px-3.5 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer border ${
+                          active
+                            ? "border-primary/60 bg-primary/15 text-primary"
+                            : "border-white/10 bg-white/[0.02] text-zinc-400 hover:text-zinc-100"
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-7 bg-[#060609] border-t lg:border-t-0 lg:border-l border-white/[0.08] p-5 sm:p-7 flex items-center justify-center">
+              <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-black">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={SERIES_ONE_ASSETS[activeSeriesSlide]?.id}
+                    src={SERIES_ONE_ASSETS[activeSeriesSlide]?.url}
+                    alt={SERIES_ONE_ASSETS[activeSeriesSlide]?.title}
+                    initial={{ opacity: 0, scale: 1.03, filter: "blur(5px)" }}
+                    animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, scale: 0.99, filter: "blur(4px)" }}
+                    transition={{ duration: 0.38, ease: EASE_OUT_EXPO }}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.corporateHq;
+                    }}
+                  />
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        </SpotlightCard>
+      </motion.div>
+
+      {/* Bottom Split: Capital Scaling Ladder (7 cols) + Key Milestones Tracker (5 cols) */}
+      <div className="grid lg:grid-cols-12 gap-6 items-start">
+        <motion.div
+          initial={{ opacity: 0, y: 22 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={SCROLL_VIEWPORT}
+          transition={{ duration: 0.65, ease: EASE_OUT_EXPO }}
+          className="lg:col-span-7"
+        >
+          <SpotlightCard tilt={false} className="p-6 sm:p-8 space-y-6">
+            <div className="space-y-1 border-b border-white/[0.07] pb-5">
+              <h2 className="font-heading text-2xl font-semibold text-zinc-50">
+                Capital Scaling Ladder
+              </h2>
+              <p className="text-xs sm:text-sm text-zinc-400">
+                Stage-by-stage target progression from foundation to $1,000,000 valuation
+              </p>
+            </div>
+
+            <div className="space-y-5">
+              {SCALING_TIERS.map((tier, idx) => {
+                const achieved = Math.min(tier.target, numericNetWorth);
+                const pct = Math.min(100, Math.round((achieved / tier.target) * 100));
+                const isDone = pct >= 100;
+
+                return (
+                  <div key={tier.phase} className="space-y-2">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <div className="flex items-baseline gap-2.5">
+                        <span className="text-sm font-semibold text-zinc-100">{tier.phase}</span>
+                        <span className="text-xs text-zinc-500">· {tier.note}</span>
+                      </div>
+                      <div className="font-mono text-xs tabular-nums flex items-center gap-3">
+                        <span className="text-zinc-400">
+                          ${achieved.toLocaleString("en-US")} / $
+                          {tier.target.toLocaleString("en-US")}
+                        </span>
+                        <span className={isDone ? "text-primary font-semibold" : "text-zinc-300"}>
+                          {pct}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-white/[0.06] overflow-hidden">
+                      <motion.div
+                        initial={{ scaleX: 0 }}
+                        whileInView={{ scaleX: 1 }}
+                        viewport={SCROLL_VIEWPORT}
+                        transition={{
+                          duration: 0.95,
+                          delay: idx * 0.08,
+                          ease: EASE_OUT_EXPO,
+                        }}
+                        style={{ width: `${Math.max(2, pct)}%` }}
+                        className={`h-full origin-left rounded-full ${
+                          isDone
+                            ? "bg-primary"
+                            : "bg-gradient-to-r from-primary/80 to-[#f3df9b]"
+                        }`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </SpotlightCard>
+        </motion.div>
+
+        {/* Key Milestones Tracker with Filter */}
+        <motion.div
+          initial={{ opacity: 0, y: 22 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={SCROLL_VIEWPORT}
+          transition={{ duration: 0.65, delay: 0.08, ease: EASE_OUT_EXPO }}
+          className="lg:col-span-5"
+        >
+          <SpotlightCard tilt={false} className="p-6 sm:p-8 space-y-6">
+            <div className="space-y-4 border-b border-white/[0.07] pb-5">
+              <div className="flex items-baseline justify-between gap-3">
+                <div>
+                  <h2 className="font-heading text-2xl font-semibold text-zinc-50">
+                    Key Milestones
+                  </h2>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Verified checkpoints toward $1M scale
+                  </p>
+                </div>
+                <span className="font-mono text-xs text-primary tabular-nums shrink-0">
+                  {completedCount}/{milestones.length} Done
+                </span>
+              </div>
+
+              <div className="inline-flex items-center gap-1 p-1 rounded-xl border border-white/10 bg-[#07070a]">
+                {(
+                  [
+                    { id: "all", label: "All" },
+                    { id: "completed", label: "Completed" },
+                    { id: "upcoming", label: "Upcoming" },
+                  ] as const
+                ).map((f) => {
+                  const active = milestoneFilter === f.id;
+                  return (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setMilestoneFilter(f.id)}
+                      className={`relative px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
+                        active ? "text-zinc-950" : "text-zinc-400 hover:text-zinc-100"
+                      }`}
+                    >
+                      {active && (
+                        <motion.span
+                          layoutId="dash-ms-filter"
+                          transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                          className="absolute inset-0 rounded-lg bg-primary"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <span className="relative z-10">{f.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {filteredMilestones.length === 0 ? (
+              <div className="py-10 text-center space-y-3">
+                <p className="text-sm text-zinc-400">No milestones match this filter.</p>
+                <button
+                  type="button"
+                  onClick={() => setMilestoneFilter("all")}
+                  className="px-3.5 py-1.5 rounded-lg border border-white/15 text-xs font-medium text-zinc-200 hover:border-primary/50 hover:text-primary cursor-pointer"
+                >
+                  Show All
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {filteredMilestones.map((ms, i) => (
+                  <motion.div
+                    key={ms.id || i}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.35, delay: i * 0.04, ease: EASE_OUT_EXPO }}
+                    className="flex gap-3.5 group"
+                  >
+                    <div className="relative pt-0.5 shrink-0">
+                      {ms.completed ? (
+                        <CheckCircle2 className="w-5 h-5 text-primary" />
+                      ) : (
+                        <Circle className="w-5 h-5 text-zinc-600" />
+                      )}
+                      {i !== filteredMilestones.length - 1 && (
+                        <div className="absolute top-6 left-2.5 w-px h-10 bg-white/10" />
+                      )}
+                    </div>
+                    <div className="space-y-1 pb-3">
+                      <div className="flex flex-wrap items-baseline gap-2">
+                        <h3
+                          className={`text-sm font-semibold leading-none ${
+                            ms.completed ? "text-zinc-100" : "text-zinc-400"
+                          }`}
+                        >
+                          {ms.title}
+                        </h3>
+                        {ms.date && (
+                          <span className="text-[11px] font-mono text-primary/80 tabular-nums">
+                            · {ms.date}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-400 leading-relaxed">{ms.description}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </SpotlightCard>
+        </motion.div>
+      </div>
     </div>
   );
 }

@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 import { Home as HomeIcon, Car, Globe, Heart, Wallet } from "lucide-react";
 import { useSiteConfig } from "../context/SiteContext";
 import { LOCAL_ASSETS } from "../lib/defaults";
-
-const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
+import { SpotlightCard } from "../components/motion/SpotlightCard";
+import { EASE_OUT_EXPO, ParallaxFrame, TextMaskReveal } from "../components/motion/MotionPrimitives";
 
 const missions = [
   {
@@ -44,19 +44,37 @@ export default function Mission() {
   return (
     <div className="space-y-20 pb-16">
       <div className="text-center space-y-4 max-w-3xl mx-auto">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
+          className="text-xs font-semibold uppercase tracking-[0.24em] text-primary"
+        >
           Purpose & Mandate
-        </p>
+        </motion.p>
         <h1 className="font-heading text-4xl md:text-6xl font-semibold tracking-tight gold-gradient">
-          Our Corporate Mission
+          <TextMaskReveal immediate delay={0.05}>
+            Our Corporate Mission
+          </TextMaskReveal>
         </h1>
-        <p className="text-base md:text-lg text-zinc-400 leading-relaxed">
+        <motion.p
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.14, ease: EASE_OUT_EXPO }}
+          className="text-base md:text-lg text-zinc-400 leading-relaxed"
+        >
           {config.mission}
-        </p>
+        </motion.p>
       </div>
 
       {/* ELITE TEAM 07 Mandate */}
-      <section className="rounded-3xl border border-white/10 bg-[#111114] p-8 sm:p-12 lg:p-16 space-y-10">
+      <motion.section
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.15 }}
+        transition={{ duration: 0.65, ease: EASE_OUT_EXPO }}
+        className="rounded-3xl border border-white/10 bg-[#111114] p-8 sm:p-12 lg:p-16 space-y-10"
+      >
         <div className="max-w-3xl mx-auto text-center space-y-4">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
             Strategic Mandate
@@ -86,42 +104,52 @@ export default function Mission() {
           ].map((item, idx) => (
             <motion.div
               key={item.phase}
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.5, delay: idx * 0.08, ease: EASE_OUT_EXPO }}
-              className="p-7 rounded-2xl bg-black/40 border border-white/10 space-y-3"
+              transition={{ duration: 0.55, delay: idx * 0.08, ease: EASE_OUT_EXPO }}
+              className="h-full"
             >
-              <h3 className="font-semibold text-base text-primary">{item.phase}</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">{item.desc}</p>
+              <SpotlightCard className="p-7 bg-black/40 space-y-3 h-full">
+                <h3 className="font-semibold text-base text-primary">{item.phase}</h3>
+                <p className="text-sm text-zinc-400 leading-relaxed">{item.desc}</p>
+              </SpotlightCard>
             </motion.div>
           ))}
         </div>
-      </section>
+      </motion.section>
 
       {/* Core Pillars Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {missions.map((mission, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 22, scale: 0.97 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true, amount: 0.15 }}
-            transition={{ duration: 0.5, delay: i * 0.06, ease: EASE_OUT_EXPO }}
-            className="p-7 rounded-2xl surface-card space-y-4"
+            transition={{ duration: 0.55, delay: i * 0.07, ease: EASE_OUT_EXPO }}
+            className="h-full"
           >
-            <div className="flex items-center justify-between">
-              <mission.icon className="w-5 h-5 text-primary" />
-              <span className="text-xs text-zinc-400 font-medium">{mission.status}</span>
-            </div>
-            <h3 className="font-heading text-2xl font-semibold text-zinc-100">{mission.title}</h3>
-            <p className="text-sm text-zinc-400 leading-relaxed">{mission.desc}</p>
+            <SpotlightCard className="p-7 space-y-4 h-full">
+              <div className="flex items-center justify-between">
+                <mission.icon className="w-5 h-5 text-primary" />
+                <span className="text-xs text-zinc-400 font-medium">{mission.status}</span>
+              </div>
+              <h3 className="font-heading text-2xl font-semibold text-zinc-100">{mission.title}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">{mission.desc}</p>
+            </SpotlightCard>
           </motion.div>
         ))}
       </div>
 
       {/* Philosophy Split */}
-      <section className="rounded-3xl border border-white/10 bg-[#111114] p-8 sm:p-12 lg:p-16">
+      <motion.section
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.15 }}
+        transition={{ duration: 0.65, ease: EASE_OUT_EXPO }}
+        className="rounded-3xl border border-white/10 bg-[#111114] p-8 sm:p-12 lg:p-16"
+      >
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
@@ -136,7 +164,7 @@ export default function Mission() {
                 consistent operational rigor, clear accountability, and patient capital stewardship.
               </p>
               <p>
-                Every milestone reached reflects a shared commitment across our leadership to build
+                Every milestone reached reflects a shared commitment across our team to build
                 institutions that endure for decades.
               </p>
             </div>
@@ -152,15 +180,17 @@ export default function Mission() {
               </div>
             </div>
           </div>
-          <div className="relative rounded-2xl overflow-hidden border border-white/10">
-            <img
-              src={LOCAL_ASSETS.strategyRoom}
-              alt="Executive planning session"
-              className="w-full aspect-video object-cover"
-            />
-          </div>
+          <ParallaxFrame offsetY={14}>
+            <div className="relative rounded-2xl overflow-hidden border border-white/10">
+              <img
+                src={LOCAL_ASSETS.strategyRoom}
+                alt="Executive planning session"
+                className="w-full aspect-video object-cover"
+              />
+            </div>
+          </ParallaxFrame>
         </div>
-      </section>
+      </motion.section>
     </div>
   );
 }

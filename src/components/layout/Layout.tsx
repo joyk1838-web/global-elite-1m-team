@@ -25,20 +25,20 @@ export default function Layout() {
     <MotionConfig reducedMotion="user">
       <ChatProvider>
         <div className="min-h-screen flex flex-col bg-background text-foreground">
-          {/* Subtle Top Scroll Progress Hairline */}
+          {/* Luminous Top Scroll Progress Hairline */}
           <motion.div
             style={{ scaleX }}
-            className="fixed top-0 left-0 right-0 h-[2px] bg-primary origin-left z-[60] pointer-events-none"
+            className="fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/60 via-primary to-[#f3df9b] shadow-[0_0_12px_rgba(226,190,83,0.45)] origin-left z-[60] pointer-events-none"
           />
           <Navbar />
           <main className="flex-grow pt-16">
             <AnimatePresence mode="wait">
               <motion.div
                 key={pathname}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                 className={
                   isHome
                     ? "w-full"

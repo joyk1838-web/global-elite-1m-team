@@ -245,10 +245,10 @@ export function ExecutiveChatModal() {
               role="dialog"
               aria-modal="true"
               aria-label="ELITE GROUP AI Strategist"
-              initial={{ opacity: 0, x: 40 }}
+              initial={{ opacity: 0, x: 56 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 40 }}
-              transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
+              exit={{ opacity: 0, x: 48 }}
+              transition={{ type: "spring", stiffness: 320, damping: 32 }}
               className="relative z-10 w-full max-w-md h-full bg-[#0b0b0e] border-l border-white/10 flex flex-col shadow-2xl"
             >
               {/* Header with live morphing particle orb */}
@@ -338,12 +338,12 @@ export function ExecutiveChatModal() {
                           {[0, 1, 2, 3].map((bar) => (
                             <motion.span
                               key={bar}
-                              className="w-[3px] rounded-full bg-primary"
-                              animate={{ height: ["6px", "16px", "6px"] }}
+                              className="w-[3px] h-4 rounded-full bg-primary origin-bottom"
+                              animate={{ scaleY: [0.35, 1, 0.35] }}
                               transition={{
-                                duration: 0.85,
+                                duration: 0.8,
                                 repeat: Infinity,
-                                delay: bar * 0.14,
+                                delay: bar * 0.13,
                                 ease: "easeInOut",
                               }}
                             />

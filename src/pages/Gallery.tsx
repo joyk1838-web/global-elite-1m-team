@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import { getGallery } from "../services/firebase";
 import { DEFAULT_GALLERY, LOCAL_ASSETS } from "../lib/defaults";
 
-const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
+import { EASE_OUT_EXPO, TextMaskReveal } from "../components/motion/MotionPrimitives";
 
 export default function Gallery() {
   const [photos, setPhotos] = useState<any[]>(DEFAULT_GALLERY);
@@ -32,32 +32,56 @@ export default function Gallery() {
   return (
     <div className="space-y-14 pb-16">
       <div className="text-center space-y-4 max-w-3xl mx-auto">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
+          className="text-xs font-semibold uppercase tracking-[0.24em] text-primary"
+        >
           Visual Archive
-        </p>
+        </motion.p>
         <h1 className="font-heading text-4xl md:text-6xl font-semibold tracking-tight gold-gradient">
-          Corporate Gallery
+          <TextMaskReveal immediate delay={0.05}>
+            Corporate Gallery
+          </TextMaskReveal>
         </h1>
-        <p className="text-base md:text-lg text-zinc-400 leading-relaxed">
+        <motion.p
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.14, ease: EASE_OUT_EXPO }}
+          className="text-base md:text-lg text-zinc-400 leading-relaxed"
+        >
           Documenting our executive team, architectural spaces, and flagship ventures.
-        </p>
+        </motion.p>
       </div>
 
       {/* Interactive Filter Segmented Control */}
       <div className="flex flex-wrap justify-center gap-2">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setFilter(cat)}
-            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
-              filter === cat
-                ? "bg-primary text-primary-foreground"
-                : "bg-[#111114] text-zinc-400 border border-white/10 hover:text-zinc-100 hover:border-white/20"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+        {categories.map((cat) => {
+          const isSelected = filter === cat;
+          return (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setFilter(cat)}
+              className={`relative px-4 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer border ${
+                isSelected
+                  ? "text-primary-foreground border-primary"
+                  : "bg-[#111114] text-zinc-400 border-white/10 hover:text-zinc-100 hover:border-white/20"
+              }`}
+            >
+              {isSelected && (
+                <motion.span
+                  layoutId="gallery-filter-pill"
+                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                  className="absolute inset-0 rounded-lg bg-primary"
+                  aria-hidden="true"
+                />
+              )}
+              <span className="relative z-10">{cat}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Photo Grid */}

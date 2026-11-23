@@ -8,8 +8,7 @@ import {
   normalizeTeamMembers,
 } from "../lib/defaults";
 import { SpotlightCard } from "../components/motion/SpotlightCard";
-
-const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
+import { EASE_OUT_EXPO, TextMaskReveal } from "../components/motion/MotionPrimitives";
 
 export default function Team() {
   const [teamMembers, setTeamMembers] = useState<any[]>(
@@ -30,15 +29,27 @@ export default function Team() {
   return (
     <div className="space-y-14 pb-16">
       <div className="text-center space-y-4 max-w-3xl mx-auto">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
+          className="text-xs font-semibold uppercase tracking-[0.24em] text-primary"
+        >
           ELITE TEAM 07
-        </p>
+        </motion.p>
         <h1 className="font-heading text-4xl md:text-6xl font-semibold tracking-tight gold-gradient">
-          Founder & Team
+          <TextMaskReveal immediate delay={0.05}>
+            Founder & Team
+          </TextMaskReveal>
         </h1>
-        <p className="text-base md:text-lg text-zinc-400 leading-relaxed">
+        <motion.p
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.14, ease: EASE_OUT_EXPO }}
+          className="text-base md:text-lg text-zinc-400 leading-relaxed"
+        >
           Led by our Founder alongside a unified team of builders executing together across ELITE GROUP.
-        </p>
+        </motion.p>
       </div>
 
       {founder && (

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type FormEvent } from "react";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -23,9 +23,15 @@ import {
 import { ParticleSculpture, type ParticleShape } from "../components/motion/ParticleSculpture";
 import { AnimatedCounter } from "../components/motion/AnimatedCounter";
 import { SpotlightCard } from "../components/motion/SpotlightCard";
-
-const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
-const SCROLL_VIEWPORT = { once: true, amount: 0.12 } as const;
+import {
+  EASE_OUT_EXPO,
+  SCROLL_VIEWPORT,
+  TextMaskReveal,
+  WordStaggerReveal,
+  KineticMarquee,
+  MagneticWrap,
+  ParallaxFrame,
+} from "../components/motion/MotionPrimitives";
 
 const staggerContainer = {
   hidden: {},
@@ -136,8 +142,14 @@ export default function Home() {
     target: heroRef,
     offset: ["start start", "end start"],
   });
-  const heroSphereY = useTransform(heroScrollProgress, [0, 1], [0, 70]);
-  const heroSphereOpacity = useTransform(heroScrollProgress, [0, 0.85], [1, 0.25]);
+  const smoothHeroProgress = useSpring(heroScrollProgress, {
+    stiffness: 140,
+    damping: 26,
+    restDelta: 0.001,
+  });
+  const heroSphereY = useTransform(smoothHeroProgress, [0, 1], [0, 84]);
+  const heroSphereScale = useTransform(smoothHeroProgress, [0, 1], [1, 1.07]);
+  const heroSphereOpacity = useTransform(smoothHeroProgress, [0, 0.85], [1, 0.22]);
 
   useEffect(() => {
     getBrands().then((data) => {
@@ -198,15 +210,15 @@ export default function Home() {
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#050507] to-transparent" />
         </div>
 
-        {/* Interactive 3D Particle Sphere Stage with subtle scroll parallax */}
+        {/* Interactive 3D Particle Sphere Stage with spring-damped scroll parallax */}
         <motion.div
-          style={{ y: heroSphereY, opacity: heroSphereOpacity }}
-          initial={{ opacity: 0, scale: 0.94 }}
+          style={{ y: heroSphereY, scale: heroSphereScale, opacity: heroSphereOpacity }}
+          initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, ease: EASE_OUT_EXPO }}
+          transition={{ duration: 1.1, ease: EASE_OUT_EXPO }}
           className="relative lg:absolute lg:inset-y-0 lg:right-0 lg:w-[56%] h-[300px] sm:h-[380px] lg:h-full z-10"
         >
-          <ParticleSculpture shape="sphere" interactive density={600} />
+          <ParticleSculpture shape="sphere" interactive density={640} />
         </motion.div>
 
         {/* Main Container */}
@@ -224,20 +236,21 @@ export default function Home() {
               </span>
             </motion.div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 22 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.75, delay: 0.08, ease: EASE_OUT_EXPO }}
-              className="font-heading text-5xl sm:text-7xl lg:text-[5.25rem] font-semibold tracking-[-0.035em] leading-[1.02] text-zinc-50"
-            >
-              {leadWords && <span className="block text-zinc-50">{leadWords}</span>}
-              <span className="block gold-gradient">{accentWord}</span>
-            </motion.h1>
+            <h1 className="font-heading text-5xl sm:text-7xl lg:text-[5.25rem] font-semibold tracking-[-0.035em] leading-[1.04] text-zinc-50">
+              {leadWords && (
+                <TextMaskReveal immediate delay={0.05} className="text-zinc-50">
+                  {leadWords}
+                </TextMaskReveal>
+              )}
+              <TextMaskReveal immediate delay={0.14} className="gold-gradient">
+                {accentWord}
+              </TextMaskReveal>
+            </h1>
 
             <motion.p
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.16, ease: EASE_OUT_EXPO }}
+              transition={{ duration: 0.75, delay: 0.22, ease: EASE_OUT_EXPO }}
               className="text-base sm:text-lg text-zinc-400 max-w-lg leading-relaxed"
             >
               {config.heroSubtitle}
@@ -246,25 +259,29 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.65, delay: 0.24, ease: EASE_OUT_EXPO }}
+              transition={{ duration: 0.65, delay: 0.3, ease: EASE_OUT_EXPO }}
               className="flex flex-wrap items-center gap-5 pt-2 pointer-events-auto"
             >
-              <button
-                type="button"
-                onClick={() => openChat()}
-                className="inline-flex items-center gap-2.5 h-12 px-7 rounded-full bg-zinc-50 text-zinc-950 hover:bg-primary hover:text-zinc-950 text-sm font-semibold transition-all duration-200 hover:scale-[1.02] cursor-pointer"
-              >
-                <MessageSquare className="w-4 h-4" />
-                Ask AI Strategist
-              </button>
+              <MagneticWrap>
+                <button
+                  type="button"
+                  onClick={() => openChat()}
+                  className="inline-flex items-center gap-2.5 h-12 px-7 rounded-full bg-zinc-50 text-zinc-950 hover:bg-primary hover:text-zinc-950 text-sm font-semibold transition-all duration-200 hover:scale-[1.02] cursor-pointer"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Ask AI Strategist
+                </button>
+              </MagneticWrap>
 
-              <Link
-                to="/dashboard"
-                className="inline-flex items-center gap-2 h-12 px-6 rounded-full border border-white/15 bg-white/[0.02] hover:border-primary/45 hover:text-primary text-sm font-medium text-zinc-200 transition-colors"
-              >
-                Progress Dashboard
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              <MagneticWrap strength={0.16}>
+                <Link
+                  to="/dashboard"
+                  className="inline-flex items-center gap-2 h-12 px-6 rounded-full border border-white/15 bg-white/[0.02] hover:border-primary/45 hover:text-primary text-sm font-medium text-zinc-200 transition-colors"
+                >
+                  Progress Dashboard
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </MagneticWrap>
             </motion.div>
           </div>
 
@@ -303,6 +320,19 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Kinetic Portfolio & Mandate Marquee */}
+      <KineticMarquee
+        items={[
+          "ELITE TEAM 07",
+          "Series 01 · $600 → $5K",
+          "Elite Soft Drink",
+          "Elite Funder",
+          "Elite Fashion",
+          "2030 Horizon · $1M Target",
+          "Dhaka · Dubai · London · Singapore",
+        ]}
+      />
+
       {/* 2. Featured First Series: $600 -> $5K Live Trading & Education Project */}
       <section className="border-t border-white/[0.07] py-24 sm:py-32 bg-[#07070a] relative overflow-hidden">
         <div
@@ -323,7 +353,7 @@ export default function Home() {
                 First Series · Active Project
               </p>
               <h2 className="font-heading text-3xl sm:text-5xl font-semibold tracking-tight text-zinc-50">
-                $600 → $5K Live Challenge Series
+                <WordStaggerReveal text="$600 → $5K Live Challenge Series" />
               </h2>
             </motion.div>
             <motion.p
@@ -354,25 +384,44 @@ export default function Home() {
 
               <motion.div
                 variants={fadeUpItem}
-                className="grid grid-cols-3 gap-5 py-6 border-y border-white/[0.08]"
+                className="space-y-5 py-6 border-y border-white/[0.08]"
               >
-                <div className="space-y-1">
-                  <p className="font-mono text-2xl sm:text-3xl font-medium text-zinc-50 tabular-nums">
-                    $600
-                  </p>
-                  <p className="text-xs text-zinc-500">শুরু · Start</p>
+                <div className="grid grid-cols-3 gap-5">
+                  <div className="space-y-1">
+                    <p className="font-mono text-2xl sm:text-3xl font-medium text-zinc-50 tabular-nums">
+                      $600
+                    </p>
+                    <p className="text-xs text-zinc-500">শুরু · Start</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-mono text-2xl sm:text-3xl font-medium text-primary tabular-nums">
+                      $5,000
+                    </p>
+                    <p className="text-xs text-zinc-500">লক্ষ্য · Target</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-mono text-2xl sm:text-3xl font-medium text-zinc-50 tabular-nums">
+                      8.3x
+                    </p>
+                    <p className="text-xs text-zinc-500">Growth Goal</p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="font-mono text-2xl sm:text-3xl font-medium text-primary tabular-nums">
-                    $5,000
-                  </p>
-                  <p className="text-xs text-zinc-500">লক্ষ্য · Target</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-mono text-2xl sm:text-3xl font-medium text-zinc-50 tabular-nums">
-                    8.3x
-                  </p>
-                  <p className="text-xs text-zinc-500">Growth Goal</p>
+
+                {/* Animated Series Trajectory Bar */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between font-mono text-[11px] text-zinc-400 tabular-nums">
+                    <span>Challenge Velocity</span>
+                    <span className="text-primary">$600 → $5,000</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-white/[0.07] overflow-hidden">
+                    <motion.div
+                      initial={{ scaleX: 0 }}
+                      whileInView={{ scaleX: 1 }}
+                      viewport={SCROLL_VIEWPORT}
+                      transition={{ duration: 1.25, delay: 0.15, ease: EASE_OUT_EXPO }}
+                      className="h-full w-full origin-left rounded-full bg-gradient-to-r from-lime-400/70 via-primary to-[#f3df9b]"
+                    />
+                  </div>
                 </div>
               </motion.div>
 
@@ -410,76 +459,86 @@ export default function Home() {
             </motion.div>
 
             {/* Right Interactive 16:9 Visual Switcher Stage */}
-            <motion.div
-              variants={scaleRevealItem}
-              initial="hidden"
-              whileInView="visible"
-              viewport={SCROLL_VIEWPORT}
-              className="lg:col-span-7 space-y-4"
-            >
-              <SpotlightCard active className="p-2 bg-[#0b0b0f]">
-                <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
-                  <AnimatePresence mode="wait">
-                    <motion.img
-                      key={SERIES_ONE_ASSETS[activeSeriesIndex]?.id}
-                      src={SERIES_ONE_ASSETS[activeSeriesIndex]?.url}
-                      alt={SERIES_ONE_ASSETS[activeSeriesIndex]?.title}
-                      initial={{ opacity: 0, scale: 1.02 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.99 }}
-                      transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.corporateHq;
-                      }}
-                    />
-                  </AnimatePresence>
-                </div>
-              </SpotlightCard>
+            <ParallaxFrame offsetY={20} className="lg:col-span-7">
+              <motion.div
+                variants={scaleRevealItem}
+                initial="hidden"
+                whileInView="visible"
+                viewport={SCROLL_VIEWPORT}
+                className="space-y-4"
+              >
+                <SpotlightCard active className="p-2 bg-[#0b0b0f]">
+                  <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
+                    <AnimatePresence mode="wait">
+                      <motion.img
+                        key={SERIES_ONE_ASSETS[activeSeriesIndex]?.id}
+                        src={SERIES_ONE_ASSETS[activeSeriesIndex]?.url}
+                        alt={SERIES_ONE_ASSETS[activeSeriesIndex]?.title}
+                        initial={{ opacity: 0, scale: 1.04, filter: "blur(6px)" }}
+                        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                        exit={{ opacity: 0, scale: 0.985, filter: "blur(4px)" }}
+                        transition={{ duration: 0.42, ease: EASE_OUT_EXPO }}
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.corporateHq;
+                        }}
+                      />
+                    </AnimatePresence>
+                  </div>
+                </SpotlightCard>
 
-              <div className="grid grid-cols-2 gap-4">
-                {SERIES_ONE_ASSETS.map((item, idx) => {
-                  const isCurrent = idx === activeSeriesIndex;
-                  return (
-                    <motion.button
-                      key={item.id}
-                      type="button"
-                      initial={{ opacity: 0, y: 16 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={SCROLL_VIEWPORT}
-                      transition={{ duration: 0.5, delay: 0.1 + idx * 0.08, ease: EASE_OUT_EXPO }}
-                      onClick={() => setActiveSeriesIndex(idx)}
-                      className={`group text-left rounded-xl border p-2.5 transition-all cursor-pointer flex items-center gap-3.5 ${
-                        isCurrent
-                          ? "border-primary/50 bg-[#121218]"
-                          : "border-white/[0.08] bg-[#0b0b0f] hover:border-white/20"
-                      }`}
-                    >
-                      <div className="w-20 sm:w-24 aspect-video rounded-lg overflow-hidden bg-black shrink-0">
-                        <img
-                          src={item.url}
-                          alt={item.label}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          referrerPolicy="no-referrer"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.corporateHq;
-                          }}
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <p className={`text-xs font-semibold truncate ${isCurrent ? "text-primary" : "text-zinc-200"}`}>
-                          {item.label}
-                        </p>
-                        <p className="text-[11px] text-zinc-500 truncate mt-0.5">
-                          {item.subtitle}
-                        </p>
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </motion.div>
+                <div className="grid grid-cols-2 gap-4">
+                  {SERIES_ONE_ASSETS.map((item, idx) => {
+                    const isCurrent = idx === activeSeriesIndex;
+                    return (
+                      <motion.button
+                        key={item.id}
+                        type="button"
+                        initial={{ opacity: 0, y: 16 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={SCROLL_VIEWPORT}
+                        transition={{ duration: 0.5, delay: 0.1 + idx * 0.08, ease: EASE_OUT_EXPO }}
+                        onClick={() => setActiveSeriesIndex(idx)}
+                        className={`relative group text-left rounded-xl border p-2.5 transition-colors cursor-pointer flex items-center gap-3.5 overflow-hidden ${
+                          isCurrent
+                            ? "border-primary/50 bg-[#121218]"
+                            : "border-white/[0.08] bg-[#0b0b0f] hover:border-white/20"
+                        }`}
+                      >
+                        {isCurrent && (
+                          <motion.span
+                            layoutId="series-active-indicator"
+                            transition={{ type: "spring", stiffness: 360, damping: 32 }}
+                            className="absolute inset-x-3 bottom-0 h-[2px] bg-primary rounded-full"
+                            aria-hidden="true"
+                          />
+                        )}
+                        <div className="w-20 sm:w-24 aspect-video rounded-lg overflow-hidden bg-black shrink-0">
+                          <img
+                            src={item.url}
+                            alt={item.label}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src = LOCAL_ASSETS.corporateHq;
+                            }}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className={`text-xs font-semibold truncate ${isCurrent ? "text-primary" : "text-zinc-200"}`}>
+                            {item.label}
+                          </p>
+                          <p className="text-[11px] text-zinc-500 truncate mt-0.5">
+                            {item.subtitle}
+                          </p>
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            </ParallaxFrame>
           </div>
         </div>
       </section>
@@ -563,13 +622,21 @@ export default function Home() {
               {CAPABILITIES.map((cap, idx) => {
                 const isActive = idx === activeCapIndex;
                 return (
-                  <motion.div key={cap.num} variants={fadeUpItem} className="h-full">
+                  <motion.div key={cap.num} variants={fadeUpItem} className="h-full relative">
                     <SpotlightCard
                       active={isActive}
                       onMouseEnter={() => setActiveCapIndex(idx)}
                       onFocus={() => setActiveCapIndex(idx)}
                       className="h-full"
                     >
+                      {isActive && (
+                        <motion.span
+                          layoutId="cap-active-indicator"
+                          transition={{ type: "spring", stiffness: 360, damping: 32 }}
+                          className="absolute top-0 inset-x-6 h-[2px] bg-primary rounded-full pointer-events-none"
+                          aria-hidden="true"
+                        />
+                      )}
                       <button
                         type="button"
                         onClick={() => setActiveCapIndex(idx)}
@@ -676,11 +743,17 @@ export default function Home() {
                         setActiveVentureIndex(idx);
                       }
                     }}
-                    className={`group py-7 px-3 sm:px-5 transition-colors cursor-pointer flex items-center justify-between gap-6 ${
-                      isSelected ? "bg-white/[0.03]" : "hover:bg-white/[0.015]"
-                    }`}
+                    className="relative group py-7 px-3 sm:px-5 transition-colors cursor-pointer flex items-center justify-between gap-6"
                   >
-                    <div className="flex items-baseline gap-6 sm:gap-8 min-w-0">
+                    {isSelected && (
+                      <motion.div
+                        layoutId="venture-active-bg"
+                        transition={{ type: "spring", stiffness: 320, damping: 32 }}
+                        className="absolute inset-0 bg-white/[0.035] pointer-events-none"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <div className="relative z-10 flex items-baseline gap-6 sm:gap-8 min-w-0">
                       <span
                         className={`font-mono text-xs tabular-nums shrink-0 transition-colors ${
                           isSelected ? "text-primary" : "text-zinc-600"
@@ -712,7 +785,7 @@ export default function Home() {
                       to={brand.link && brand.link !== "#" ? brand.link : "/vision"}
                       aria-label={`Explore ${brand.name}`}
                       onClick={(e) => e.stopPropagation()}
-                      className={`w-10 h-10 rounded-full border flex items-center justify-center shrink-0 transition-all duration-200 ${
+                      className={`relative z-10 w-10 h-10 rounded-full border flex items-center justify-center shrink-0 transition-all duration-200 ${
                         isSelected
                           ? "border-primary bg-primary text-zinc-950 scale-105"
                           : "border-white/15 text-zinc-500 group-hover:border-white/35 group-hover:text-zinc-100"
@@ -736,16 +809,19 @@ export default function Home() {
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeVenture?.id || activeVentureIndex}
-                  initial={{ opacity: 0, y: 10, scale: 0.985 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.985 }}
-                  transition={{ duration: 0.32, ease: EASE_OUT_EXPO }}
+                  initial={{ opacity: 0, y: 12, scale: 0.98, filter: "blur(6px)" }}
+                  animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: -10, scale: 0.985, filter: "blur(4px)" }}
+                  transition={{ duration: 0.36, ease: EASE_OUT_EXPO }}
                   className="rounded-2xl border border-white/[0.08] bg-[#0b0b0f] overflow-hidden"
                 >
                   <div className="aspect-[16/10] relative overflow-hidden bg-zinc-950">
-                    <img
+                    <motion.img
                       src={activeVenture?.image || LOCAL_ASSETS.corporateHq}
                       alt={activeVenture?.name || "ELITE GROUP Venture"}
+                      initial={{ scale: 1.07 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 1.4, ease: EASE_OUT_EXPO }}
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                       onError={(e) => {

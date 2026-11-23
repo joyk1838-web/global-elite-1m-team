@@ -147,6 +147,15 @@
   }
 }
 
+@keyframes marquee-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
 .animate-ambient-pan {
   animation: ambient-pan 18s ease-in-out infinite;
   will-change: transform, opacity;
@@ -155,6 +164,15 @@
 .animate-silk-sweep {
   animation: silk-sweep 14s ease-in-out infinite;
   will-change: transform, opacity;
+}
+
+.animate-marquee {
+  animation: marquee-scroll 34s linear infinite;
+  will-change: transform;
+}
+
+.group\/marquee:hover .animate-marquee {
+  animation-play-state: paused;
 }
 
 .architectural-grid {
@@ -166,7 +184,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .animate-ambient-pan,
-  .animate-silk-sweep {
+  .animate-silk-sweep,
+  .animate-marquee {
     animation: none;
   }
   html {
