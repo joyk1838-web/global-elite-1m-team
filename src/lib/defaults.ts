@@ -45,8 +45,8 @@ export const DEFAULT_SITE_CONFIG: SiteConfigData = {
   mission: "Scale from $1K to $1M and achieve enduring financial freedom.",
   vision: "A borderless portfolio of category-leading enterprises by 2030.",
   mdName: "MD Joy Hossen",
-  mdRole: "Founder & Managing Director",
-  mdImage: "https://lh3.googleusercontent.com/d/17EAsoYWww3QDowMyBdis6uBaVAWnBEaG",
+  mdRole: "Founder",
+  mdImage: "",
   mdQuote: "Vision without execution is merely an ambition.",
   mdBannerQuote:
     "We are not simply building a company; we are building an enduring institution where financial independence is the baseline and global impact is the standard.",
@@ -96,10 +96,10 @@ export const DEFAULT_TEAM = [
   {
     id: "joy",
     name: "MD Joy Hossen",
-    role: "Founder & Managing Director",
-    bio: "Directs corporate strategy, capital allocation, and multi-venture expansion across the ELITE GROUP ecosystem.",
-    image: "https://lh3.googleusercontent.com/d/17EAsoYWww3QDowMyBdis6uBaVAWnBEaG",
-    badges: ["Founder", "Corporate Strategy"],
+    role: "Founder",
+    bio: "Founder of ELITE GROUP, directing long-term vision, capital discipline, and ecosystem growth.",
+    image: "",
+    badges: [] as string[],
     initials: "JH",
     email: "",
     linkedin: "",
@@ -109,10 +109,10 @@ export const DEFAULT_TEAM = [
   {
     id: "tarif",
     name: "MD Tarif Hossain",
-    role: "Co-Founder & Operations Lead",
-    bio: "Leads operational execution, supply discipline, and systems governance across every business unit.",
-    image: "https://lh3.googleusercontent.com/d/11wUM19yxC7UrVODSItly9XdoMhRKR46u",
-    badges: ["Co-Founder", "Operations"],
+    role: "Team Member",
+    bio: "Core member of ELITE TEAM 07 contributing to disciplined execution across group projects.",
+    image: "",
+    badges: [] as string[],
     initials: "TH",
     email: "",
     linkedin: "",
@@ -122,17 +122,80 @@ export const DEFAULT_TEAM = [
   {
     id: "asif",
     name: "MD ASIF HOSSAIN",
-    role: "Technology Director",
-    bio: "Architects the digital infrastructure, automation pipelines, and technical foundations powering global scale.",
-    image: "https://lh3.googleusercontent.com/d/1Ja11gJERdSAHC9SbTSZKe_5MMPoqvKKg",
-    badges: ["Technology", "Architecture"],
+    role: "Team Member",
+    bio: "Core member of ELITE TEAM 07 contributing to digital systems and project delivery.",
+    image: "",
+    badges: [] as string[],
     initials: "AH",
     email: "",
     linkedin: "",
     twitter: "",
     order: 3,
   },
+  {
+    id: "anisur",
+    name: "ANISUR RAHMAN",
+    role: "Team Member",
+    bio: "Core member of ELITE TEAM 07 contributing to planning, coordination, and active series growth.",
+    image: "",
+    badges: [] as string[],
+    initials: "AR",
+    email: "",
+    linkedin: "",
+    twitter: "",
+    order: 4,
+  },
+  {
+    id: "babu",
+    name: "BABU",
+    role: "Team Member",
+    bio: "Core member of ELITE TEAM 07 contributing to collaborative execution and momentum.",
+    image: "",
+    badges: [] as string[],
+    initials: "BB",
+    email: "",
+    linkedin: "",
+    twitter: "",
+    order: 5,
+  },
 ];
+
+export function isFounderMember(member: any): boolean {
+  if (!member) return false;
+  if (member.id === "joy") return true;
+  const role = String(member.role || "").trim().toLowerCase();
+  return role === "founder" || role === "funder";
+}
+
+export function getMemberInitials(member: any): string {
+  if (member?.initials && String(member.initials).trim()) {
+    return String(member.initials).trim().slice(0, 2).toUpperCase();
+  }
+  const parts = String(member?.name || "")
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w && w.toUpperCase() !== "MD");
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return "EG";
+}
+
+export function normalizeTeamMembers(members: any[]): any[] {
+  return (members || []).map((member) => {
+    const founder = isFounderMember(member);
+    return {
+      ...member,
+      role: founder ? "Founder" : "Team Member",
+      badges: [],
+      image: "",
+      initials: getMemberInitials(member),
+    };
+  });
+}
 
 export const DEFAULT_MILESTONES = [
   {
@@ -235,7 +298,38 @@ export const DEFAULT_TIMELINE = [
   },
 ];
 
+export const SERIES_ONE_ASSETS = [
+  {
+    id: "series-1-challenge",
+    label: "01. $600 → $5K Challenge",
+    title: "নিয়ম মেনেই কি সম্ভব? $600 → $5K চ্যালেঞ্জ সিরিজ",
+    subtitle: "Rule-based capital growth from $600 starting equity to a $5,000 target.",
+    url: "/assets/aistudio/IMG_8920_ff6da8e6.png",
+  },
+  {
+    id: "series-1-education",
+    label: "02. Trading Education",
+    title: "সহজ বাংলায় ট্রেডিং শিক্ষা — লাইভ চ্যালেঞ্জ: $600 → $5K",
+    subtitle: "Risk Management · Trading Psychology · Professional Mindset",
+    url: "/assets/aistudio/IMG_9147_c7b2e618.png",
+  },
+];
+
 export const DEFAULT_GALLERY = [
+  {
+    id: "gal-s1-1",
+    url: "/assets/aistudio/IMG_8920_ff6da8e6.png",
+    title: "Series 01 — $600 → $5K চ্যালেঞ্জ সিরিজ",
+    category: "Series 01",
+    uploadedAt: "2026-11-22T15:00:00.000Z",
+  },
+  {
+    id: "gal-s1-2",
+    url: "/assets/aistudio/IMG_9147_c7b2e618.png",
+    title: "Series 01 — সহজ বাংলায় ট্রেডিং শিক্ষা ($600 → $5K)",
+    category: "Series 01",
+    uploadedAt: "2026-11-22T15:01:00.000Z",
+  },
   {
     id: "gal1",
     url: corporateHqImg,
@@ -249,27 +343,6 @@ export const DEFAULT_GALLERY = [
     title: "Executive Strategy Summit",
     category: "Leadership",
     uploadedAt: "2026-02-10T10:00:00.000Z",
-  },
-  {
-    id: "gal3",
-    url: "https://lh3.googleusercontent.com/d/17EAsoYWww3QDowMyBdis6uBaVAWnBEaG",
-    title: "MD Joy Hossen — Managing Director",
-    category: "Leadership",
-    uploadedAt: "2026-02-14T10:00:00.000Z",
-  },
-  {
-    id: "gal4",
-    url: "https://lh3.googleusercontent.com/d/11wUM19yxC7UrVODSItly9XdoMhRKR46u",
-    title: "MD Tarif Hossain — Operations Lead",
-    category: "Leadership",
-    uploadedAt: "2026-02-15T10:00:00.000Z",
-  },
-  {
-    id: "gal5",
-    url: "https://lh3.googleusercontent.com/d/1Ja11gJERdSAHC9SbTSZKe_5MMPoqvKKg",
-    title: "MD ASIF HOSSAIN — Technology Director",
-    category: "Leadership",
-    uploadedAt: "2026-02-16T10:00:00.000Z",
   },
   {
     id: "gal6",

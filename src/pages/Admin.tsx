@@ -50,6 +50,8 @@ import {
   DEFAULT_TEAM,
   DEFAULT_TIMELINE,
   SiteConfigData,
+  getMemberInitials,
+  isFounderMember,
 } from "../lib/defaults";
 import { compressImageToDataUrl } from "../lib/imageUpload";
 import { db } from "../lib/firebase";
@@ -195,7 +197,51 @@ export default function Admin() {
 
   useEffect(() => {
     if (isAdmin) {
-      refreshAllData();
+      refreshAllData().then(async () => {
+        try {
+          if (localStorage.getItem("elite_team_v3_flat_synced")) return;
+          const existingTeam = await getTeam();
+          if (existingTeam && existingTeam.length > 0) {
+            const byId = new Map(existingTeam.map((m: any) => [m.id, m]));
+            for (const member of DEFAULT_TEAM) {
+              const current: any = byId.get(member.id);
+              if (!current) {
+                await setDoc(doc(db, "team", member.id), member);
+              } else {
+                await setDoc(
+                  doc(db, "team", member.id),
+                  {
+                    ...current,
+                    role: member.role,
+                    badges: [],
+                    image: "",
+                  },
+                  { merge: true }
+                );
+              }
+            }
+            for (const current of existingTeam as any[]) {
+              if (!DEFAULT_TEAM.some((d) => d.id === current.id)) {
+                const founder = isFounderMember(current);
+                await setDoc(
+                  doc(db, "team", current.id),
+                  {
+                    role: founder ? "Founder" : "Team Member",
+                    badges: [],
+                    image: "",
+                  },
+                  { merge: true }
+                );
+              }
+            }
+            await updateSiteConfig({ mdRole: "Founder", mdImage: "" });
+            setTeamMembers((await getTeam()) || []);
+          }
+          localStorage.setItem("elite_team_v3_flat_synced", "1");
+        } catch (err) {
+          console.warn("Team flat role sync skipped:", err);
+        }
+      });
     }
   }, [isAdmin]);
 
@@ -250,27 +296,22 @@ export default function Admin() {
   };
 
   const saveMember = async (member: any) => {
-    if (!member.name?.trim() || !member.role?.trim() || !member.image?.trim()) {
-      showStatus("error", "Name, role, and profile picture are required.");
+    if (!member.name?.trim()) {
+      showStatus("error", "Name is required.");
       return;
     }
     setSaving(true);
     try {
       const id = member.id || doc(collection(db, "team")).id;
-      const badgesArray = Array.isArray(member.badges)
-        ? member.badges
-        : String(member.badgesText || "")
-            .split(",")
-            .map((b: string) => b.trim())
-            .filter(Boolean);
+      const founder = isFounderMember({ ...member, id });
 
       await saveTeamMember(id, {
         name: member.name.trim(),
-        role: member.role.trim(),
+        role: founder ? "Founder" : "Team Member",
         bio: member.bio || "",
-        image: member.image.trim(),
-        initials: member.initials || member.name.slice(0, 2).toUpperCase(),
-        badges: badgesArray,
+        image: "",
+        initials: getMemberInitials(member),
+        badges: [],
         email: member.email || "",
         linkedin: member.linkedin || "",
         twitter: member.twitter || "",
@@ -719,29 +760,23 @@ export default function Admin() {
               </div>
 
               <div className="pt-4 border-t border-white/10 space-y-4">
-                <h4 className="font-semibold text-sm text-primary">Managing Director Spotlight</h4>
+                <h4 className="font-semibold text-sm text-primary">Founder Spotlight</h4>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-300">MD Name</label>
+                    <label className="text-xs font-medium text-zinc-300">Founder Name</label>
                     <Input
                       value={siteConfig.mdName}
                       onChange={(e) => setSiteConfig({ ...siteConfig, mdName: e.target.value })}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-300">MD Title</label>
+                    <label className="text-xs font-medium text-zinc-300">Title</label>
                     <Input
                       value={siteConfig.mdRole}
                       onChange={(e) => setSiteConfig({ ...siteConfig, mdRole: e.target.value })}
                     />
                   </div>
                 </div>
-                <ImageField
-                  label="MD Portrait Picture"
-                  value={siteConfig.mdImage}
-                  onChange={(val) => setSiteConfig({ ...siteConfig, mdImage: val })}
-                  onErrorMsg={(msg) => showStatus("error", msg)}
-                />
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-zinc-300">Portrait Caption Quote</label>
@@ -853,8 +888,10 @@ export default function Admin() {
         <TabsContent value="team" className="space-y-6">
           <div className="flex flex-wrap justify-between items-center gap-4">
             <div>
-              <h3 className="font-heading text-2xl font-semibold">Team Member Profiles & Pictures</h3>
-              <p className="text-sm text-zinc-400">Add, edit, upload portraits, or reorder leadership profiles.</p>
+              <h3 className="font-heading text-2xl font-semibold">Team Member Profiles</h3>
+              <p className="text-sm text-zinc-400">
+                Founder stays Founder; all other members are listed uniformly as Team Members without profile pictures or positions.
+              </p>
             </div>
             <Button
               size="sm"
@@ -862,11 +899,11 @@ export default function Admin() {
               onClick={() =>
                 setEditingMember({
                   name: "",
-                  role: "",
+                  role: "Team Member",
                   bio: "",
                   image: "",
                   initials: "",
-                  badgesText: "Leadership",
+                  badges: [],
                   email: "",
                   linkedin: "",
                   twitter: "",
@@ -886,12 +923,6 @@ export default function Admin() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <ImageField
-                  label="Profile Picture"
-                  value={editingMember.image || ""}
-                  onChange={(val) => setEditingMember({ ...editingMember, image: val })}
-                  onErrorMsg={(msg) => showStatus("error", msg)}
-                />
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-zinc-300">Full Name</label>
@@ -902,25 +933,11 @@ export default function Admin() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-300">Role / Title</label>
+                    <label className="text-xs font-medium text-zinc-300">Status</label>
                     <Input
-                      placeholder="e.g. Managing Director"
-                      value={editingMember.role}
-                      onChange={(e) => setEditingMember({ ...editingMember, role: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-zinc-300">Focus Areas (comma-separated)</label>
-                    <Input
-                      placeholder="Strategy, Operations"
-                      value={
-                        editingMember.badgesText !== undefined
-                          ? editingMember.badgesText
-                          : (editingMember.badges || []).join(", ")
-                      }
-                      onChange={(e) =>
-                        setEditingMember({ ...editingMember, badgesText: e.target.value, badges: undefined })
-                      }
+                      value={isFounderMember(editingMember) ? "Founder" : "Team Member"}
+                      disabled
+                      className="opacity-75"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -939,7 +956,7 @@ export default function Admin() {
                       onChange={(e) => setEditingMember({ ...editingMember, email: e.target.value })}
                     />
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 md:col-span-2">
                     <label className="text-xs font-medium text-zinc-300">LinkedIn URL (optional)</label>
                     <Input
                       placeholder="https://linkedin.com/in/..."
@@ -949,9 +966,9 @@ export default function Admin() {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-zinc-300">Biography</label>
+                  <label className="text-xs font-medium text-zinc-300">Short Note (optional)</label>
                   <Textarea
-                    placeholder="Short executive bio..."
+                    placeholder="Team member note..."
                     value={editingMember.bio || ""}
                     onChange={(e) => setEditingMember({ ...editingMember, bio: e.target.value })}
                   />
@@ -977,42 +994,48 @@ export default function Admin() {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-5">
-              {teamMembers.map((member) => (
-                <Card key={member.id} className="surface-card border-white/10">
-                  <CardContent className="p-5 flex items-center gap-5">
-                    <img
-                      src={member.image}
-                      className="w-16 h-16 rounded-xl object-cover border border-white/15 shrink-0"
-                      alt={member.name}
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-zinc-100 truncate">{member.name}</p>
-                      <p className="text-xs text-primary truncate">{member.role}</p>
-                      <p className="text-xs text-zinc-500 mt-1 truncate">{member.bio}</p>
-                    </div>
-                    <div className="flex gap-1.5 shrink-0">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-zinc-400 hover:text-primary"
-                        onClick={() => setEditingMember(member)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-zinc-400 hover:text-red-400"
-                        onClick={() => handleDeleteMember(member.id)}
-                        disabled={saving}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              {teamMembers.map((member) => {
+                const founder = isFounderMember(member);
+                return (
+                  <Card key={member.id} className="surface-card border-white/10">
+                    <CardContent className="p-5 flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${founder ? "border-primary/40 bg-primary/10 text-primary" : "border-white/15 bg-white/[0.03] text-zinc-200"}`}>
+                        <span className="font-heading text-sm font-semibold">
+                          {getMemberInitials(member)}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-zinc-100 truncate">{member.name}</p>
+                        <p className={`text-xs truncate ${founder ? "text-primary" : "text-zinc-400"}`}>
+                          {founder ? "Founder" : "Team Member"}
+                        </p>
+                        {member.bio && (
+                          <p className="text-xs text-zinc-500 mt-1 truncate">{member.bio}</p>
+                        )}
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-zinc-400 hover:text-primary"
+                          onClick={() => setEditingMember(member)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-zinc-400 hover:text-red-400"
+                          onClick={() => handleDeleteMember(member.id)}
+                          disabled={saving}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </TabsContent>

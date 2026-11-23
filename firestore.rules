@@ -6,7 +6,13 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email == 'joyk1838@gmail.com';
+      return isSignedIn() &&
+             request.auth.token.email_verified == true &&
+             request.auth.token.email == 'joyk1838@gmail.com';
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
     function isValidBrand(data) {
@@ -17,10 +23,17 @@ service cloud.firestore {
     }
 
     function isValidTeamMember(data) {
-      return data.keys().hasAll(['name', 'role', 'image', 'order']) &&
+      return data.keys().hasAll(['name', 'role', 'order']) &&
+             data.keys().hasOnly(['id', 'name', 'role', 'bio', 'image', 'badges', 'initials', 'email', 'linkedin', 'twitter', 'order']) &&
              data.name is string && data.name.size() > 0 && data.name.size() <= 120 &&
              data.role is string && data.role.size() > 0 && data.role.size() <= 120 &&
-             data.image is string && data.image.size() > 0 && data.image.size() <= 350000 &&
+             (!('bio' in data) || (data.bio is string && data.bio.size() <= 2000)) &&
+             (!('image' in data) || (data.image is string && data.image.size() <= 350000)) &&
+             (!('badges' in data) || (data.badges is list && data.badges.size() <= 10 && (data.badges.size() == 0 || data.badges[0] is string))) &&
+             (!('initials' in data) || (data.initials is string && data.initials.size() <= 16)) &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 200)) &&
+             (!('linkedin' in data) || (data.linkedin is string && data.linkedin.size() <= 500)) &&
+             (!('twitter' in data) || (data.twitter is string && data.twitter.size() <= 500)) &&
              data.order is number;
     }
 
@@ -63,8 +76,8 @@ service cloud.firestore {
 
     match /team/{memberId} {
       allow read: if true;
-      allow create, update: if isAdmin() && isValidTeamMember(request.resource.data);
-      allow delete: if isAdmin();
+      allow create, update: if isAdmin() && isValidId(memberId) && isValidTeamMember(request.resource.data);
+      allow delete: if isAdmin() && isValidId(memberId);
     }
 
     match /gallery/{itemId} {

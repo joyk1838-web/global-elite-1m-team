@@ -52,15 +52,31 @@ function serveSeoFilesPlugin(): Plugin {
   };
 }
 
+function disableHmrClientPlugin(): Plugin {
+  return {
+    name: 'disable-hmr-client',
+    enforce: 'post',
+    apply: 'serve',
+    transform(code, id) {
+      if (id.endsWith('/vite/dist/client/client.mjs') || id.endsWith('\\vite\\dist\\client\\client.mjs')) {
+        return code.replace(
+          'transport.connect(createHMRHandler(handleMessage));',
+          '/* HMR disabled */'
+        );
+      }
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [serveSeoFilesPlugin(), react(), tailwindcss()],
+  plugins: [serveSeoFilesPlugin(), disableHmrClientPlugin(), react(), tailwindcss()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),
     },
   },
   server: {
-    // HMR is disabled in AI Studio via DISABLE_HMR env var.
-    hmr: process.env.DISABLE_HMR !== 'true',
+    // HMR is disabled in AI Studio.
+    hmr: false,
   },
 });

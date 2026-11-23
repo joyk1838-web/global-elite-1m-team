@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useEffect, useState } from "react";
 import { getGrowthData, getMilestones } from "../services/firebase";
 import { useSiteConfig } from "../context/SiteContext";
-import { DEFAULT_GROWTH, DEFAULT_MILESTONES } from "../lib/defaults";
+import { DEFAULT_GROWTH, DEFAULT_MILESTONES, SERIES_ONE_ASSETS } from "../lib/defaults";
 
 const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -99,6 +99,52 @@ export default function Dashboard() {
           </motion.div>
         ))}
       </div>
+
+      {/* Series 01 Active Project Banner ($600 -> $5K) */}
+      <Card className="surface-card border-white/10 overflow-hidden">
+        <div className="grid lg:grid-cols-12 items-center">
+          <div className="lg:col-span-5 p-6 sm:p-8 space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+              Series 01 · Active Challenge
+            </p>
+            <h2 className="font-heading text-2xl sm:text-3xl font-semibold text-zinc-100">
+              $600 → $5K Live Trading Project
+            </h2>
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              সহজ বাংলায় ট্রেডিং শিক্ষা — নিয়ম মেনে $600 থেকে $5,000 লক্ষ্যে রিস্ক ম্যানেজমেন্ট, ট্রেডিং সাইকোলজি এবং প্রফেশনাল মাইন্ডসেট ভিত্তিক প্রজেক্ট।
+            </p>
+            <div className="grid grid-cols-3 gap-4 pt-3 border-t border-white/10">
+              <div>
+                <p className="font-mono text-xl font-semibold text-zinc-100 tabular-nums">$600</p>
+                <p className="text-[11px] text-zinc-500">Start</p>
+              </div>
+              <div>
+                <p className="font-mono text-xl font-semibold text-primary tabular-nums">$5,000</p>
+                <p className="text-[11px] text-zinc-500">Target</p>
+              </div>
+              <div>
+                <p className="font-mono text-xl font-semibold text-zinc-100 tabular-nums">8.3x</p>
+                <p className="text-[11px] text-zinc-500">Multiplier</p>
+              </div>
+            </div>
+          </div>
+          <div className="lg:col-span-7 grid sm:grid-cols-2 gap-3 p-4 sm:p-6 bg-black/30">
+            {SERIES_ONE_ASSETS.map((item) => (
+              <div
+                key={item.id}
+                className="aspect-video rounded-xl overflow-hidden border border-white/10 bg-black"
+              >
+                <img
+                  src={item.url}
+                  alt={item.title}
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Monthly Revenue Chart */}

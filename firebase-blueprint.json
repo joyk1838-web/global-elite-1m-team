@@ -30,7 +30,7 @@
         "twitter": { "type": "string" },
         "order": { "type": "number" }
       },
-      "required": ["name", "role", "image", "order"]
+      "required": ["name", "role", "order"]
     },
     "GalleryItem": {
       "title": "Gallery Item",
