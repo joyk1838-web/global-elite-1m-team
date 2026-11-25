@@ -22,6 +22,8 @@ import { useSiteConfig } from "../context/SiteContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { sanitizeHref, sanitizeImageSrc } from "@/lib/utils";
+import { usePageSeo } from "../hooks/usePageSeo";
 import {
   updateSiteConfig,
   getBrands,
@@ -40,6 +42,10 @@ import {
   getGallery,
   saveGalleryItem,
   deleteGalleryItem,
+  getTrades,
+  saveTradeRecord,
+  deleteTradeRecord,
+  type TradeRecord,
 } from "../services/firebase";
 import {
   DEFAULT_BRANDS,
@@ -49,6 +55,7 @@ import {
   DEFAULT_SITE_CONFIG,
   DEFAULT_TEAM,
   DEFAULT_TIMELINE,
+  LOCAL_ASSETS,
   SiteConfigData,
   getMemberInitials,
   isFounderMember,
@@ -84,14 +91,15 @@ function ImageField({ label, value, onChange, onErrorMsg, aspectClass = "w-20 h-
     }
   };
 
+  const previewSrc = sanitizeImageSrc(value);
   return (
     <div className="space-y-2">
       <label className="text-xs font-medium text-zinc-300">{label}</label>
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 rounded-xl bg-black/40 border border-white/10">
         <div className={`${aspectClass} rounded-lg overflow-hidden bg-zinc-900 border border-white/10 shrink-0 flex items-center justify-center`}>
-          {value ? (
+          {previewSrc ? (
             <img
-              src={value}
+              src={previewSrc}
               alt={label}
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
@@ -145,6 +153,13 @@ function ImageField({ label, value, onChange, onErrorMsg, aspectClass = "w-20 h-
 }
 
 export default function Admin() {
+  usePageSeo({
+    title: "Admin Control Center",
+    description: "Authorized executive content management portal for GLOBAL ELITE 1M TEAM.",
+    path: "/admin",
+    noindex: true,
+  });
+
   const { user, login, logout, isAdmin, loading, error } = useAuth();
   const { config: liveConfig, refreshConfig } = useSiteConfig();
 
@@ -156,6 +171,7 @@ export default function Admin() {
   const [milestones, setMilestones] = useState<any[]>([]);
   const [growthPoints, setGrowthPoints] = useState<any[]>([]);
   const [galleryItems, setGalleryItems] = useState<any[]>([]);
+  const [trades, setTrades] = useState<TradeRecord[]>([]);
   const [siteConfig, setSiteConfig] = useState<SiteConfigData>(DEFAULT_SITE_CONFIG);
   const [statusBanner, setStatusBanner] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
@@ -165,6 +181,7 @@ export default function Admin() {
   const [editingMilestone, setEditingMilestone] = useState<any>(null);
   const [editingGrowth, setEditingGrowth] = useState<any>(null);
   const [editingGallery, setEditingGallery] = useState<any>(null);
+  const [editingTrade, setEditingTrade] = useState<Partial<TradeRecord> | null>(null);
 
   const showStatus = (type: "success" | "error", message: string) => {
     setStatusBanner({ type, message });
@@ -174,13 +191,14 @@ export default function Admin() {
   };
 
   const refreshAllData = async () => {
-    const [bData, tData, tlData, mData, gData, galData] = await Promise.all([
+    const [bData, tData, tlData, mData, gData, galData, trData] = await Promise.all([
       getBrands(),
       getTeam(),
       getTimeline(),
       getMilestones(),
       getGrowthData(),
       getGallery(),
+      getTrades(),
     ]);
     setBrands(bData || []);
     setTeamMembers(tData || []);
@@ -188,6 +206,7 @@ export default function Admin() {
     setMilestones(mData || []);
     setGrowthPoints(gData || []);
     setGalleryItems(galData || []);
+    setTrades(trData || []);
     await refreshConfig();
   };
 
@@ -197,51 +216,7 @@ export default function Admin() {
 
   useEffect(() => {
     if (isAdmin) {
-      refreshAllData().then(async () => {
-        try {
-          if (localStorage.getItem("elite_team_v3_flat_synced")) return;
-          const existingTeam = await getTeam();
-          if (existingTeam && existingTeam.length > 0) {
-            const byId = new Map(existingTeam.map((m: any) => [m.id, m]));
-            for (const member of DEFAULT_TEAM) {
-              const current: any = byId.get(member.id);
-              if (!current) {
-                await setDoc(doc(db, "team", member.id), member);
-              } else {
-                await setDoc(
-                  doc(db, "team", member.id),
-                  {
-                    ...current,
-                    role: member.role,
-                    badges: [],
-                    image: "",
-                  },
-                  { merge: true }
-                );
-              }
-            }
-            for (const current of existingTeam as any[]) {
-              if (!DEFAULT_TEAM.some((d) => d.id === current.id)) {
-                const founder = isFounderMember(current);
-                await setDoc(
-                  doc(db, "team", current.id),
-                  {
-                    role: founder ? "Founder" : "Team Member",
-                    badges: [],
-                    image: "",
-                  },
-                  { merge: true }
-                );
-              }
-            }
-            await updateSiteConfig({ mdRole: "Founder", mdImage: "" });
-            setTeamMembers((await getTeam()) || []);
-          }
-          localStorage.setItem("elite_team_v3_flat_synced", "1");
-        } catch (err) {
-          console.warn("Team flat role sync skipped:", err);
-        }
-      });
+      refreshAllData();
     }
   }, [isAdmin]);
 
@@ -281,12 +256,37 @@ export default function Admin() {
     }
   };
 
+  const validateOptionalUrl = (val: string | undefined, label: string): string | null => {
+    const trimmed = String(val || "").trim();
+    if (!trimmed) return "";
+    const safe = sanitizeHref(trimmed, "__INVALID__");
+    if (safe === "__INVALID__") {
+      showStatus("error", `${label} must be a valid https:// or / relative URL.`);
+      return null;
+    }
+    return safe;
+  };
+
   const saveGeneralConfig = async () => {
+    const linkedin = validateOptionalUrl(siteConfig.linkedinUrl, "LinkedIn URL");
+    const twitter = validateOptionalUrl(siteConfig.twitterUrl, "X / Twitter URL");
+    const instagram = validateOptionalUrl(siteConfig.instagramUrl, "Instagram URL");
+    if (linkedin === null || twitter === null || instagram === null) return;
+    if (siteConfig.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(siteConfig.contactEmail.trim())) {
+      showStatus("error", "Please enter a valid contact email address.");
+      return;
+    }
+
     setSaving(true);
     try {
-      await updateSiteConfig({ ...siteConfig });
+      await updateSiteConfig({
+        ...siteConfig,
+        linkedinUrl: linkedin,
+        twitterUrl: twitter,
+        instagramUrl: instagram,
+      });
       await refreshConfig();
-      showStatus("success", "Company identity, hero, MD profile, and metrics saved.");
+      showStatus("success", "Company identity, hero, Founder profile, and metrics saved.");
     } catch (e) {
       console.error(e);
       showStatus("error", "Failed to save company settings.");
@@ -300,6 +300,13 @@ export default function Admin() {
       showStatus("error", "Name is required.");
       return;
     }
+    const safeLinkedIn = validateOptionalUrl(member.linkedin, "Member LinkedIn URL");
+    if (safeLinkedIn === null) return;
+    const safeImage = member.image?.trim() ? sanitizeImageSrc(member.image, "__INVALID__") : "";
+    if (safeImage === "__INVALID__") {
+      showStatus("error", "Profile image must be a valid https:// URL or uploaded photo.");
+      return;
+    }
     setSaving(true);
     try {
       const id = member.id || doc(collection(db, "team")).id;
@@ -309,12 +316,12 @@ export default function Admin() {
         name: member.name.trim(),
         role: founder ? "Founder" : "Team Member",
         bio: member.bio || "",
-        image: "",
+        image: safeImage,
         initials: getMemberInitials(member),
         badges: [],
-        email: member.email || "",
-        linkedin: member.linkedin || "",
-        twitter: member.twitter || "",
+        email: member.email?.trim() || "",
+        linkedin: safeLinkedIn,
+        twitter: validateOptionalUrl(member.twitter, "Member Twitter URL") || "",
         order: Number(member.order) || 1,
       });
       showStatus("success", `Saved profile for ${member.name}.`);
@@ -347,6 +354,13 @@ export default function Admin() {
       showStatus("error", "Brand name and image are required.");
       return;
     }
+    const safeImage = sanitizeImageSrc(brand.image, "__INVALID__");
+    if (safeImage === "__INVALID__") {
+      showStatus("error", "Venture cover image must be a valid https:// URL or uploaded image.");
+      return;
+    }
+    const safeLink = validateOptionalUrl(brand.link || "/vision", "Destination Route");
+    if (safeLink === null) return;
     setSaving(true);
     try {
       const brandId = brand.id || doc(collection(db, "brands")).id;
@@ -355,8 +369,8 @@ export default function Admin() {
         {
           name: brand.name.trim(),
           tagline: brand.tagline || "",
-          image: brand.image.trim(),
-          link: brand.link || "/vision",
+          image: safeImage,
+          link: safeLink || "/vision",
           desc: brand.desc || "",
           order: Number(brand.order) || 1,
         },
@@ -533,13 +547,18 @@ export default function Admin() {
       showStatus("error", "Title and image are required.");
       return;
     }
+    const safeUrl = sanitizeImageSrc(item.url, "__INVALID__");
+    if (safeUrl === "__INVALID__") {
+      showStatus("error", "Gallery image must be a valid https:// URL or uploaded image.");
+      return;
+    }
     setSaving(true);
     try {
       const id = item.id || doc(collection(db, "gallery")).id;
       await saveGalleryItem(id, {
         title: item.title.trim(),
         category: item.category?.trim() || "Corporate",
-        url: item.url.trim(),
+        url: safeUrl,
         uploadedAt: item.uploadedAt || new Date().toISOString(),
       });
       showStatus("success", "Gallery item saved.");
@@ -562,6 +581,48 @@ export default function Admin() {
     } catch (e) {
       console.error(e);
       showStatus("error", "Failed to delete gallery photo.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveTrade = async (entry: Partial<TradeRecord>) => {
+    if (!entry.date?.trim() || !entry.entryType) {
+      showStatus("error", "Date and entry type are required.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const id = entry.id || doc(collection(db, "trades")).id;
+      await saveTradeRecord(id, {
+        date: entry.date.trim(),
+        entryType: entry.entryType,
+        symbol: String(entry.symbol || "").trim(),
+        pnl: entry.entryType === "trade" ? Number(entry.pnl) || 0 : 0,
+        amount: entry.entryType !== "trade" ? Number(entry.amount) || 0 : 0,
+        notes: String(entry.notes || "").trim(),
+        order: Number(entry.order) || trades.length + 1,
+      });
+      showStatus("success", "Verified ledger record saved.");
+      setEditingTrade(null);
+      setTrades((await getTrades()) || []);
+    } catch (e) {
+      console.error(e);
+      showStatus("error", "Failed to save ledger entry.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteTrade = async (id: string) => {
+    setSaving(true);
+    try {
+      await deleteTradeRecord(id);
+      showStatus("success", "Ledger record removed.");
+      setTrades((await getTrades()) || []);
+    } catch (e) {
+      console.error(e);
+      showStatus("error", "Failed to delete ledger record.");
     } finally {
       setSaving(false);
     }
@@ -923,6 +984,13 @@ export default function Admin() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <ImageField
+                  label="Profile Photo (optional)"
+                  value={editingMember.image || ""}
+                  onChange={(val) => setEditingMember({ ...editingMember, image: val })}
+                  onErrorMsg={(msg) => showStatus("error", msg)}
+                  aspectClass="w-16 h-16"
+                />
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-zinc-300">Full Name</label>
@@ -1124,7 +1192,7 @@ export default function Admin() {
             {brands.map((brand) => (
               <Card key={brand.id} className="surface-card border-white/10 overflow-hidden">
                 <img
-                  src={brand.image}
+                  src={sanitizeImageSrc(brand.image, LOCAL_ASSETS.corporateHq)}
                   className="w-full h-36 object-cover"
                   alt={brand.name}
                   referrerPolicy="no-referrer"
@@ -1337,6 +1405,150 @@ export default function Admin() {
               ))}
             </div>
           </div>
+
+          {/* Verified Trading Ledger */}
+          <div className="space-y-4 pt-6 border-t border-white/10">
+            <div className="flex flex-wrap justify-between items-center gap-4">
+              <div>
+                <h3 className="font-heading text-2xl font-semibold">Verified Trading Performance Ledger</h3>
+                <p className="text-sm text-zinc-400">
+                  Log verified deposits, withdrawals, or closed trades shown transparently on the Progress Dashboard.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-primary/35 text-primary"
+                onClick={() =>
+                  setEditingTrade({
+                    date: new Date().toISOString().slice(0, 10),
+                    entryType: "trade",
+                    symbol: "",
+                    pnl: 0,
+                    amount: 0,
+                    notes: "",
+                    order: trades.length + 1,
+                  })
+                }
+              >
+                <Plus className="w-4 h-4 mr-2" /> Add Ledger Entry
+              </Button>
+            </div>
+
+            {editingTrade && (
+              <Card className="surface-card border-primary/35">
+                <CardContent className="p-6 space-y-4">
+                  <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <Input
+                      placeholder="Date (YYYY-MM-DD)"
+                      value={editingTrade.date || ""}
+                      onChange={(e) => setEditingTrade({ ...editingTrade, date: e.target.value })}
+                    />
+                    <select
+                      className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                      value={editingTrade.entryType || "trade"}
+                      onChange={(e) =>
+                        setEditingTrade({
+                          ...editingTrade,
+                          entryType: e.target.value as TradeRecord["entryType"],
+                        })
+                      }
+                    >
+                      <option value="trade">Trade</option>
+                      <option value="deposit">Deposit</option>
+                      <option value="withdrawal">Withdrawal</option>
+                    </select>
+                    <Input
+                      placeholder="Instrument / Reference"
+                      value={editingTrade.symbol || ""}
+                      onChange={(e) => setEditingTrade({ ...editingTrade, symbol: e.target.value })}
+                    />
+                    {editingTrade.entryType === "trade" ? (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="P&L ($)"
+                        value={editingTrade.pnl ?? 0}
+                        onChange={(e) =>
+                          setEditingTrade({ ...editingTrade, pnl: parseFloat(e.target.value) || 0 })
+                        }
+                      />
+                    ) : (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="Amount ($)"
+                        value={editingTrade.amount ?? 0}
+                        onChange={(e) =>
+                          setEditingTrade({ ...editingTrade, amount: parseFloat(e.target.value) || 0 })
+                        }
+                      />
+                    )}
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <Input
+                      placeholder="Notes (optional)"
+                      value={editingTrade.notes || ""}
+                      onChange={(e) => setEditingTrade({ ...editingTrade, notes: e.target.value })}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Order"
+                      value={editingTrade.order ?? 1}
+                      onChange={(e) =>
+                        setEditingTrade({ ...editingTrade, order: parseInt(e.target.value) || 1 })
+                      }
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      className="gold-glow flex-1"
+                      onClick={() => handleSaveTrade(editingTrade)}
+                      disabled={saving}
+                    >
+                      Save Ledger Entry
+                    </Button>
+                    <Button variant="ghost" onClick={() => setEditingTrade(null)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <div className="grid md:grid-cols-2 gap-4">
+              {trades.map((tr) => (
+                <Card key={tr.id} className="surface-card border-white/10">
+                  <CardContent className="p-4 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-mono text-primary">
+                        {tr.date} · {tr.entryType.toUpperCase()}
+                      </p>
+                      <p className="text-sm font-semibold text-zinc-100 truncate">
+                        {tr.symbol || "Ledger Record"} — $
+                        {tr.entryType === "trade" ? Number(tr.pnl ?? 0) : Number(tr.amount ?? 0)}
+                      </p>
+                      {tr.notes && <p className="text-xs text-zinc-400 truncate">{tr.notes}</p>}
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditingTrade(tr)}>
+                        <Edit className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-red-400"
+                        onClick={() => handleDeleteTrade(tr.id)}
+                        disabled={saving}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </TabsContent>
 
         {/* 5. Roadmap Tab */}
@@ -1512,7 +1724,7 @@ export default function Admin() {
             {galleryItems.map((item) => (
               <Card key={item.id} className="surface-card border-white/10 overflow-hidden">
                 <img
-                  src={item.url}
+                  src={sanitizeImageSrc(item.url, LOCAL_ASSETS.corporateHq)}
                   alt={item.title}
                   className="w-full h-40 object-cover"
                   referrerPolicy="no-referrer"

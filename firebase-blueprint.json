@@ -2,32 +2,33 @@
   "entities": {
     "Brand": {
       "title": "Brand",
-      "description": "Core brands and ventures of Elite Group",
+      "description": "Core brands and ventures of GLOBAL ELITE 1M TEAM (ELITE GROUP)",
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
-        "tagline": { "type": "string" },
-        "image": { "type": "string" },
-        "link": { "type": "string" },
-        "desc": { "type": "string" },
+        "name": { "type": "string", "maxLength": 120 },
+        "tagline": { "type": "string", "maxLength": 160 },
+        "image": { "type": "string", "maxLength": 350000 },
+        "link": { "type": "string", "maxLength": 300 },
+        "desc": { "type": "string", "maxLength": 1200 },
         "order": { "type": "number" }
       },
       "required": ["name", "image", "order"]
     },
     "TeamMember": {
       "title": "Team Member",
-      "description": "Leadership and team member profiles of Elite Group",
+      "description": "Leadership and team member profiles of GLOBAL ELITE 1M TEAM",
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
-        "role": { "type": "string" },
-        "bio": { "type": "string" },
-        "image": { "type": "string" },
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 120 },
+        "role": { "type": "string", "maxLength": 120 },
+        "bio": { "type": "string", "maxLength": 2000 },
+        "image": { "type": "string", "maxLength": 350000 },
         "badges": { "type": "array", "items": { "type": "string" } },
-        "initials": { "type": "string" },
-        "email": { "type": "string" },
-        "linkedin": { "type": "string" },
-        "twitter": { "type": "string" },
+        "initials": { "type": "string", "maxLength": 16 },
+        "email": { "type": "string", "maxLength": 200 },
+        "linkedin": { "type": "string", "maxLength": 500 },
+        "twitter": { "type": "string", "maxLength": 500 },
         "order": { "type": "number" }
       },
       "required": ["name", "role", "order"]
@@ -37,23 +38,23 @@
       "description": "Corporate archive photography and highlights",
       "type": "object",
       "properties": {
-        "url": { "type": "string" },
-        "title": { "type": "string" },
-        "category": { "type": "string" },
-        "uploadedAt": { "type": "string", "format": "date-time" }
+        "url": { "type": "string", "maxLength": 350000 },
+        "title": { "type": "string", "maxLength": 160 },
+        "category": { "type": "string", "maxLength": 80 },
+        "uploadedAt": { "type": "string", "format": "date-time", "maxLength": 64 }
       },
       "required": ["url", "title", "uploadedAt"]
     },
     "TimelineEvent": {
       "title": "Timeline Event",
-      "description": "Strategic roadmap milestones for Elite Group",
+      "description": "Strategic roadmap milestones for GLOBAL ELITE 1M TEAM",
       "type": "object",
       "properties": {
-        "year": { "type": "string" },
-        "title": { "type": "string" },
-        "desc": { "type": "string" },
-        "icon": { "type": "string" },
-        "status": { "type": "string" },
+        "year": { "type": "string", "maxLength": 32 },
+        "title": { "type": "string", "maxLength": 160 },
+        "desc": { "type": "string", "maxLength": 1200 },
+        "icon": { "type": "string", "maxLength": 40 },
+        "status": { "type": "string", "enum": ["completed", "current", "upcoming"] },
         "order": { "type": "number" }
       },
       "required": ["year", "title", "status", "order"]
@@ -63,9 +64,9 @@
       "description": "Operational milestone items for progress tracking",
       "type": "object",
       "properties": {
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "date": { "type": "string" },
+        "title": { "type": "string", "maxLength": 160 },
+        "description": { "type": "string", "maxLength": 1200 },
+        "date": { "type": "string", "maxLength": 64 },
         "completed": { "type": "boolean" },
         "order": { "type": "number" }
       },
@@ -76,39 +77,54 @@
       "description": "Monthly revenue and growth trajectory entries",
       "type": "object",
       "properties": {
-        "month": { "type": "string" },
+        "month": { "type": "string", "maxLength": 64 },
         "amount": { "type": "number" },
         "order": { "type": "number" }
       },
       "required": ["month", "amount"]
     },
-    "SiteConfig": {
-      "title": "Site Config",
-      "description": "Global company identity, hero content, MD profile, metrics, and contact details",
+    "TradeRecord": {
+      "title": "Trade Record",
+      "description": "Verified trading execution or capital transfer entries",
       "type": "object",
       "properties": {
-        "companyName": { "type": "string" },
-        "tagline": { "type": "string" },
-        "heroEyebrow": { "type": "string" },
-        "heroTitle": { "type": "string" },
-        "heroSubtitle": { "type": "string" },
-        "mission": { "type": "string" },
-        "vision": { "type": "string" },
-        "mdName": { "type": "string" },
-        "mdRole": { "type": "string" },
-        "mdImage": { "type": "string" },
-        "mdQuote": { "type": "string" },
-        "mdBannerQuote": { "type": "string" },
-        "totalRevenue": { "type": "string" },
-        "netWorth": { "type": "string" },
-        "multiplier": { "type": "string" },
-        "status": { "type": "string" },
-        "activeUnits": { "type": "string" },
-        "valuationTarget": { "type": "string" },
-        "contactEmail": { "type": "string" },
-        "linkedinUrl": { "type": "string" },
-        "twitterUrl": { "type": "string" },
-        "instagramUrl": { "type": "string" }
+        "date": { "type": "string", "maxLength": 64 },
+        "symbol": { "type": "string", "maxLength": 64 },
+        "entryType": { "type": "string", "enum": ["trade", "deposit", "withdrawal"] },
+        "pnl": { "type": "number" },
+        "amount": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 500 },
+        "order": { "type": "number" }
+      },
+      "required": ["date", "entryType", "order"]
+    },
+    "SiteConfig": {
+      "title": "Site Config",
+      "description": "Global company identity, hero content, founder profile, metrics, and contact details",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string", "maxLength": 120 },
+        "tagline": { "type": "string", "maxLength": 200 },
+        "heroEyebrow": { "type": "string", "maxLength": 200 },
+        "heroTitle": { "type": "string", "maxLength": 200 },
+        "heroSubtitle": { "type": "string", "maxLength": 1200 },
+        "mission": { "type": "string", "maxLength": 1200 },
+        "vision": { "type": "string", "maxLength": 1200 },
+        "mdName": { "type": "string", "maxLength": 120 },
+        "mdRole": { "type": "string", "maxLength": 120 },
+        "mdImage": { "type": "string", "maxLength": 350000 },
+        "mdQuote": { "type": "string", "maxLength": 1000 },
+        "mdBannerQuote": { "type": "string", "maxLength": 1500 },
+        "totalRevenue": { "type": "string", "maxLength": 64 },
+        "netWorth": { "type": "string", "maxLength": 64 },
+        "multiplier": { "type": "string", "maxLength": 32 },
+        "status": { "type": "string", "maxLength": 80 },
+        "activeUnits": { "type": "string", "maxLength": 32 },
+        "valuationTarget": { "type": "string", "maxLength": 64 },
+        "contactEmail": { "type": "string", "maxLength": 200 },
+        "linkedinUrl": { "type": "string", "maxLength": 500 },
+        "twitterUrl": { "type": "string", "maxLength": 500 },
+        "instagramUrl": { "type": "string", "maxLength": 500 }
       },
       "required": ["companyName", "mission"]
     }
@@ -120,7 +136,7 @@
     },
     "team": {
       "schema": "TeamMember",
-      "description": "Leadership team members"
+      "description": "Leadership and team members"
     },
     "gallery": {
       "schema": "GalleryItem",
@@ -137,6 +153,10 @@
     "growth": {
       "schema": "GrowthPoint",
       "description": "Growth points and revenue charts"
+    },
+    "trades": {
+      "schema": "TradeRecord",
+      "description": "Optional verified trading ledger entries"
     },
     "config": {
       "schema": "SiteConfig",

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Home as HomeIcon, Car, Globe, Heart, Wallet } from "lucide-react";
 import { useSiteConfig } from "../context/SiteContext";
 import { LOCAL_ASSETS } from "../lib/defaults";
+import { usePageSeo } from "../hooks/usePageSeo";
 import { SpotlightCard } from "../components/motion/SpotlightCard";
 import { EASE_OUT_EXPO, ParallaxFrame, TextMaskReveal } from "../components/motion/MotionPrimitives";
 
@@ -39,6 +40,12 @@ const missions = [
 ];
 
 export default function Mission() {
+  usePageSeo({
+    title: "Corporate Mission",
+    description:
+      "Explore the strategic mandate, three-phase framework, and operating standards of GLOBAL ELITE 1M TEAM.",
+    path: "/mission",
+  });
   const { config } = useSiteConfig();
 
   return (
@@ -185,6 +192,8 @@ export default function Mission() {
               <img
                 src={LOCAL_ASSETS.strategyRoom}
                 alt="Executive planning session"
+                loading="lazy"
+                decoding="async"
                 className="w-full aspect-video object-cover"
               />
             </div>

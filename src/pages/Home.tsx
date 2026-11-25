@@ -3,11 +3,15 @@ import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "fra
 import {
   ArrowRight,
   ArrowUpRight,
+  Mail,
   MessageSquare,
   Send,
+  ShieldAlert,
   Quote,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { sanitizeHref, sanitizeImageSrc } from "@/lib/utils";
+import { usePageSeo } from "../hooks/usePageSeo";
 import { getBrands, getTeam } from "../services/firebase";
 import { Logo } from "@/components/ui/Logo";
 import { useSiteConfig } from "../context/SiteContext";
@@ -128,6 +132,13 @@ const CAPABILITIES: CapabilityItem[] = [
 ];
 
 export default function Home() {
+  usePageSeo({
+    title: "GLOBAL ELITE 1M TEAM | One Team. One Vision. One Goal.",
+    description:
+      "GLOBAL ELITE 1M TEAM — disciplined trading education, Series 01 $600 to $5K challenge, transparent performance tracking, and multi-venture growth toward 2030.",
+    path: "/",
+  });
+
   const { config } = useSiteConfig();
   const { openChat } = useExecutiveChat();
   const [brands, setBrands] = useState<any[]>(DEFAULT_BRANDS);
@@ -231,12 +242,12 @@ export default function Home() {
               className="flex items-center gap-3.5"
             >
               <Logo size="sm" />
-              <span className="text-xs font-medium tracking-[0.18em] uppercase text-zinc-400">
-                {config.heroEyebrow}
+              <span className="text-[11px] sm:text-xs font-medium tracking-[0.18em] uppercase text-zinc-300">
+                GLOBAL ELITE 1M TEAM · {config.heroEyebrow}
               </span>
             </motion.div>
 
-            <h1 className="font-heading text-5xl sm:text-7xl lg:text-[5.25rem] font-semibold tracking-[-0.035em] leading-[1.04] text-zinc-50">
+            <h1 className="font-heading text-4xl sm:text-6xl lg:text-[5rem] font-semibold tracking-[-0.035em] leading-[1.06] text-zinc-50">
               {leadWords && (
                 <TextMaskReveal immediate delay={0.05} className="text-zinc-50">
                   {leadWords}
@@ -251,16 +262,25 @@ export default function Home() {
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.75, delay: 0.22, ease: EASE_OUT_EXPO }}
-              className="text-base sm:text-lg text-zinc-400 max-w-lg leading-relaxed"
+              className="text-base sm:text-lg text-zinc-400 max-w-xl leading-relaxed"
             >
               {config.heroSubtitle}
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.26, ease: EASE_OUT_EXPO }}
+              className="text-xs font-medium tracking-[0.18em] uppercase text-primary/90"
+            >
+              ONE TEAM. ONE VISION. ONE GOAL. · DISCIPLINE · CONSISTENCY · TRANSPARENCY · GROWTH
             </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.65, delay: 0.3, ease: EASE_OUT_EXPO }}
-              className="flex flex-wrap items-center gap-5 pt-2 pointer-events-auto"
+              className="flex flex-wrap items-center gap-4 sm:gap-5 pt-2 pointer-events-auto"
             >
               <MagneticWrap>
                 <button
@@ -290,14 +310,14 @@ export default function Home() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.32, ease: EASE_OUT_EXPO }}
-            className="mt-14 pt-8 border-t border-white/[0.08] flex flex-wrap items-end justify-between gap-8"
+            className="mt-12 sm:mt-14 pt-8 border-t border-white/[0.08] flex flex-wrap items-end justify-between gap-8"
           >
-            <div className="grid grid-cols-3 gap-8 sm:gap-14">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-12 w-full sm:w-auto">
               <div className="space-y-1">
                 <p className="font-mono text-2xl sm:text-3xl font-medium text-zinc-50">
                   <AnimatedCounter value={config.netWorth} prefix="$" suffix="+" />
                 </p>
-                <p className="text-xs text-zinc-500">Assets Under Mgmt</p>
+                <p className="text-xs text-zinc-500">Reported Equity Base</p>
               </div>
               <div className="space-y-1">
                 <p className="font-mono text-2xl sm:text-3xl font-medium text-primary">
@@ -314,7 +334,7 @@ export default function Home() {
             </div>
 
             <p className="hidden md:block text-xs text-zinc-500 tracking-wide">
-              ELITE GROUP · Global Trajectory
+              GLOBAL ELITE 1M TEAM · Structured Trajectory
             </p>
           </motion.div>
         </div>
@@ -336,8 +356,8 @@ export default function Home() {
       {/* 2. Featured First Series: $600 -> $5K Live Trading & Education Project */}
       <section className="border-t border-white/[0.07] py-24 sm:py-32 bg-[#07070a] relative overflow-hidden">
         <div
-          className="pointer-events-none absolute -top-24 right-0 w-[420px] h-[420px] rounded-full blur-3xl opacity-20"
-          style={{ background: "radial-gradient(circle, rgba(163, 230, 53, 0.35), transparent 70%)" }}
+          className="pointer-events-none absolute -top-24 right-0 w-[380px] h-[380px] rounded-full blur-3xl opacity-15"
+          style={{ background: "radial-gradient(circle, rgba(226, 190, 83, 0.24), transparent 70%)" }}
           aria-hidden="true"
         />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 relative z-10">
@@ -388,29 +408,29 @@ export default function Home() {
               >
                 <div className="grid grid-cols-3 gap-5">
                   <div className="space-y-1">
-                    <p className="font-mono text-2xl sm:text-3xl font-medium text-zinc-50 tabular-nums">
+                    <p className="font-mono text-xl sm:text-3xl font-medium text-zinc-50 tabular-nums">
                       $600
                     </p>
                     <p className="text-xs text-zinc-500">শুরু · Start</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="font-mono text-2xl sm:text-3xl font-medium text-primary tabular-nums">
+                    <p className="font-mono text-xl sm:text-3xl font-medium text-primary tabular-nums">
                       $5,000
                     </p>
                     <p className="text-xs text-zinc-500">লক্ষ্য · Target</p>
                   </div>
                   <div className="space-y-1">
-                    <p className="font-mono text-2xl sm:text-3xl font-medium text-zinc-50 tabular-nums">
+                    <p className="font-mono text-xl sm:text-3xl font-medium text-zinc-50 tabular-nums">
                       8.3x
                     </p>
-                    <p className="text-xs text-zinc-500">Growth Goal</p>
+                    <p className="text-xs text-zinc-500">Target Ratio</p>
                   </div>
                 </div>
 
                 {/* Animated Series Trajectory Bar */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between font-mono text-[11px] text-zinc-400 tabular-nums">
-                    <span>Challenge Velocity</span>
+                    <span>Series 01 Target Range</span>
                     <span className="text-primary">$600 → $5,000</span>
                   </div>
                   <div className="h-1.5 w-full rounded-full bg-white/[0.07] overflow-hidden">
@@ -419,7 +439,7 @@ export default function Home() {
                       whileInView={{ scaleX: 1 }}
                       viewport={SCROLL_VIEWPORT}
                       transition={{ duration: 1.25, delay: 0.15, ease: EASE_OUT_EXPO }}
-                      className="h-full w-full origin-left rounded-full bg-gradient-to-r from-lime-400/70 via-primary to-[#f3df9b]"
+                      className="h-full w-full origin-left rounded-full bg-gradient-to-r from-primary/65 via-primary to-[#f3df9b]"
                     />
                   </div>
                 </div>
@@ -456,6 +476,16 @@ export default function Home() {
                   Ask AI Strategist
                 </button>
               </motion.div>
+
+              <motion.p
+                variants={fadeUpItem}
+                className="flex items-start gap-2 text-[11px] text-zinc-500 leading-relaxed pt-1"
+              >
+                <ShieldAlert className="w-3.5 h-3.5 text-primary/70 shrink-0 mt-0.5" aria-hidden="true" />
+                <span>
+                  Trading involves substantial financial risk. Past performance does not guarantee future results. Visitors should make independent financial decisions.
+                </span>
+              </motion.p>
             </motion.div>
 
             {/* Right Interactive 16:9 Visual Switcher Stage */}
@@ -472,8 +502,10 @@ export default function Home() {
                     <AnimatePresence mode="wait">
                       <motion.img
                         key={SERIES_ONE_ASSETS[activeSeriesIndex]?.id}
-                        src={SERIES_ONE_ASSETS[activeSeriesIndex]?.url}
+                        src={sanitizeImageSrc(SERIES_ONE_ASSETS[activeSeriesIndex]?.url, LOCAL_ASSETS.corporateHq)}
                         alt={SERIES_ONE_ASSETS[activeSeriesIndex]?.title}
+                        loading="lazy"
+                        decoding="async"
                         initial={{ opacity: 0, scale: 1.04, filter: "blur(6px)" }}
                         animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
                         exit={{ opacity: 0, scale: 0.985, filter: "blur(4px)" }}
@@ -488,7 +520,7 @@ export default function Home() {
                   </div>
                 </SpotlightCard>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {SERIES_ONE_ASSETS.map((item, idx) => {
                     const isCurrent = idx === activeSeriesIndex;
                     return (
@@ -516,8 +548,10 @@ export default function Home() {
                         )}
                         <div className="w-20 sm:w-24 aspect-video rounded-lg overflow-hidden bg-black shrink-0">
                           <img
-                            src={item.url}
+                            src={sanitizeImageSrc(item.url, LOCAL_ASSETS.corporateHq)}
                             alt={item.label}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                             referrerPolicy="no-referrer"
                             onError={(e) => {
@@ -782,7 +816,7 @@ export default function Home() {
                     </div>
 
                     <Link
-                      to={brand.link && brand.link !== "#" ? brand.link : "/vision"}
+                      to={sanitizeHref(brand.link && brand.link !== "#" ? brand.link : "/vision", "/vision")}
                       aria-label={`Explore ${brand.name}`}
                       onClick={(e) => e.stopPropagation()}
                       className={`relative z-10 w-10 h-10 rounded-full border flex items-center justify-center shrink-0 transition-all duration-200 ${
@@ -817,8 +851,10 @@ export default function Home() {
                 >
                   <div className="aspect-[16/10] relative overflow-hidden bg-zinc-950">
                     <motion.img
-                      src={activeVenture?.image || LOCAL_ASSETS.corporateHq}
-                      alt={activeVenture?.name || "ELITE GROUP Venture"}
+                      src={sanitizeImageSrc(activeVenture?.image, LOCAL_ASSETS.corporateHq)}
+                      alt={activeVenture?.name || "GLOBAL ELITE 1M TEAM Venture"}
+                      loading="lazy"
+                      decoding="async"
                       initial={{ scale: 1.07 }}
                       animate={{ scale: 1 }}
                       transition={{ duration: 1.4, ease: EASE_OUT_EXPO }}
@@ -845,11 +881,12 @@ export default function Home() {
                     </p>
                     <div className="pt-3 border-t border-white/[0.07] flex items-center justify-between gap-4">
                       <Link
-                        to={
+                        to={sanitizeHref(
                           activeVenture?.link && activeVenture.link !== "#"
                             ? activeVenture.link
-                            : "/vision"
-                        }
+                            : "/vision",
+                          "/vision"
+                        )}
                         className="inline-flex items-center text-xs font-semibold uppercase tracking-widest text-zinc-100 hover:text-primary transition-colors"
                       >
                         Explore Division
@@ -988,6 +1025,7 @@ export default function Home() {
             {(() => {
               const founder = teamMembers.find((m) => isFounderMember(m));
               const members = teamMembers.filter((m) => !isFounderMember(m));
+              const founderImg = sanitizeImageSrc(founder?.image);
               return (
                 <div className="space-y-6">
                   {founder && (
@@ -1000,11 +1038,22 @@ export default function Home() {
                       <SpotlightCard active className="p-7 sm:p-9 bg-[#0b0b10]">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                           <div className="flex items-start sm:items-center gap-5">
-                            <div className="w-14 h-14 rounded-xl border border-primary/40 bg-primary/10 flex items-center justify-center shrink-0">
-                              <span className="font-heading text-lg font-semibold text-primary tracking-tight">
-                                {founder.initials}
-                              </span>
-                            </div>
+                            {founderImg ? (
+                              <img
+                                src={founderImg}
+                                alt={founder.name}
+                                loading="lazy"
+                                decoding="async"
+                                className="w-14 h-14 rounded-xl border border-primary/40 object-cover shrink-0"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div className="w-14 h-14 rounded-xl border border-primary/40 bg-primary/10 flex items-center justify-center shrink-0">
+                                <span className="font-heading text-lg font-semibold text-primary tracking-tight">
+                                  {founder.initials}
+                                </span>
+                              </div>
+                            )}
                             <div className="space-y-1">
                               <p className="text-xs font-medium tracking-[0.18em] uppercase text-primary">
                                 Founder
@@ -1025,38 +1074,59 @@ export default function Home() {
                   )}
 
                   <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                    {members.map((member, i) => (
-                      <motion.div
-                        key={member.id || i}
-                        initial={{ opacity: 0, y: 24, scale: 0.97 }}
-                        whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                        transition={{ duration: 0.6, delay: i * 0.08, ease: EASE_OUT_EXPO }}
-                        viewport={SCROLL_VIEWPORT}
-                        className="h-full"
-                      >
-                        <SpotlightCard className="p-6 h-full flex flex-col justify-between gap-6 bg-[#0a0a0e]">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="w-11 h-11 rounded-lg border border-white/10 bg-white/[0.03] flex items-center justify-center">
-                              <span className="font-heading text-sm font-semibold text-zinc-200">
-                                {member.initials}
+                    {members.map((member, i) => {
+                      const memberImg = sanitizeImageSrc(member?.image);
+                      return (
+                        <motion.div
+                          key={member.id || i}
+                          initial={{ opacity: 0, y: 24, scale: 0.97 }}
+                          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                          transition={{ duration: 0.6, delay: i * 0.08, ease: EASE_OUT_EXPO }}
+                          viewport={SCROLL_VIEWPORT}
+                          className="h-full"
+                        >
+                          <SpotlightCard className="p-6 h-full flex flex-col justify-between gap-5 bg-[#0a0a0e]">
+                            <div className="flex items-center justify-between gap-3">
+                              {memberImg ? (
+                                <img
+                                  src={memberImg}
+                                  alt={member.name}
+                                  loading="lazy"
+                                  decoding="async"
+                                  className="w-11 h-11 rounded-lg border border-white/10 object-cover shrink-0"
+                                  referrerPolicy="no-referrer"
+                                />
+                              ) : (
+                                <div className="w-11 h-11 rounded-lg border border-white/10 bg-white/[0.03] flex items-center justify-center">
+                                  <span className="font-heading text-sm font-semibold text-zinc-200">
+                                    {member.initials}
+                                  </span>
+                                </div>
+                              )}
+                              <span className="font-mono text-xs text-zinc-600 tabular-nums">
+                                {String(i + 1).padStart(2, "0")}
                               </span>
                             </div>
-                            <span className="font-mono text-xs text-zinc-600 tabular-nums">
-                              {String(i + 1).padStart(2, "0")}
-                            </span>
-                          </div>
 
-                          <div className="space-y-1.5">
-                            <p className="text-xs font-medium text-zinc-500">
-                              Team Member
-                            </p>
-                            <h3 className="font-heading text-xl font-semibold text-zinc-50 leading-snug">
-                              {member.name}
-                            </h3>
-                          </div>
-                        </SpotlightCard>
-                      </motion.div>
-                    ))}
+                            <div className="space-y-2">
+                              <div className="space-y-1">
+                                <p className="text-xs font-medium text-zinc-500">
+                                  Team Member
+                                </p>
+                                <h3 className="font-heading text-xl font-semibold text-zinc-50 leading-snug">
+                                  {member.name}
+                                </h3>
+                              </div>
+                              {member.bio && (
+                                <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">
+                                  {member.bio}
+                                </p>
+                              )}
+                            </div>
+                          </SpotlightCard>
+                        </motion.div>
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -1123,6 +1193,23 @@ export default function Home() {
                 </button>
               ))}
             </div>
+            <div className="pt-3 border-t border-white/[0.07] flex flex-wrap items-center justify-between gap-4 text-xs text-zinc-400">
+              <span>Direct Organization Contact:</span>
+              <div className="flex flex-wrap items-center gap-4">
+                {config.contactEmail && (
+                  <a
+                    href={sanitizeHref(`mailto:${config.contactEmail.trim()}`, "")}
+                    className="inline-flex items-center gap-1.5 text-zinc-200 hover:text-primary transition-colors font-medium"
+                  >
+                    <Mail className="w-3.5 h-3.5 text-primary" />
+                    {config.contactEmail}
+                  </a>
+                )}
+                <Link to="/team" className="text-primary hover:underline font-medium">
+                  Connect with Leadership
+                </Link>
+              </div>
+            </div>
           </motion.div>
 
           {/* Closing Editorial Quote & Final Action */}
@@ -1152,7 +1239,7 @@ export default function Home() {
               variants={fadeUpItem}
               className="text-xs font-medium tracking-widest uppercase text-primary"
             >
-              {config.mdName} · Founder
+              {config.mdName} · Founder · GLOBAL ELITE 1M TEAM
             </motion.p>
             <motion.div
               variants={fadeUpItem}

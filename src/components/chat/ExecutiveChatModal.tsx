@@ -152,9 +152,12 @@ export function ExecutiveChatModal() {
       });
 
       const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || "Advisory service unavailable.");
+      }
       const replyText =
         data?.text ||
-        "Command acknowledged. ELITE GROUP operations continue toward the 2030 global milestone.";
+        "Command acknowledged. GLOBAL ELITE 1M TEAM operations continue toward the 2030 milestone.";
 
       setMessages((prev) => [
         ...prev,

@@ -191,7 +191,7 @@ export function normalizeTeamMembers(members: any[]): any[] {
       ...member,
       role: founder ? "Founder" : "Team Member",
       badges: [],
-      image: "",
+      image: typeof member?.image === "string" ? member.image : "",
       initials: getMemberInitials(member),
     };
   });

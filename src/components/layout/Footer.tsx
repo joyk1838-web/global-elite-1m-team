@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Instagram, Linkedin, Mail, Twitter, ArrowUpRight } from "lucide-react";
+import { sanitizeHref } from "@/lib/utils";
 import { Logo } from "@/components/ui/Logo";
 import { useSiteConfig } from "../../context/SiteContext";
 
@@ -34,13 +35,22 @@ function useExecutiveClock() {
 export default function Footer() {
   const { config } = useSiteConfig();
   const liveClock = useExecutiveClock();
+  const brandDisplayName =
+    config.companyName && config.companyName !== "ELITE GROUP"
+      ? config.companyName
+      : "GLOBAL ELITE 1M TEAM";
+
+  const safeMailto = sanitizeHref(
+    config.contactEmail ? `mailto:${config.contactEmail.trim()}` : "",
+    ""
+  );
 
   const socialLinks = [
-    { href: config.linkedinUrl, icon: Linkedin, label: "LinkedIn" },
-    { href: config.twitterUrl, icon: Twitter, label: "X / Twitter" },
-    { href: config.instagramUrl, icon: Instagram, label: "Instagram" },
-    { href: config.contactEmail ? `mailto:${config.contactEmail}` : "", icon: Mail, label: "Email" },
-  ].filter((item) => Boolean(item.href && item.href.trim() !== ""));
+    { href: sanitizeHref(config.linkedinUrl), icon: Linkedin, label: "LinkedIn" },
+    { href: sanitizeHref(config.twitterUrl), icon: Twitter, label: "X / Twitter" },
+    { href: sanitizeHref(config.instagramUrl), icon: Instagram, label: "Instagram" },
+    { href: safeMailto, icon: Mail, label: "Email" },
+  ].filter((item) => Boolean(item.href));
 
   return (
     <footer className="bg-[#050507] border-t border-white/[0.07] mt-auto">
@@ -52,22 +62,22 @@ export default function Footer() {
               <Logo size="md" />
               <div className="flex flex-col leading-tight">
                 <span className="font-heading text-lg font-semibold tracking-tight text-zinc-50">
-                  {config.companyName || "ELITE GROUP"}
+                  {brandDisplayName}
                 </span>
                 <span className="text-xs text-zinc-400">
-                  {config.tagline || "Building Excellence"}
+                  {config.tagline || "One Team. One Vision. One Goal."}
                 </span>
               </div>
             </Link>
 
-            {config.contactEmail && (
+            {safeMailto && (
               <div>
                 <a
-                  href={`mailto:${config.contactEmail}`}
-                  className="text-lg sm:text-xl font-medium text-zinc-100 hover:text-primary transition-colors inline-flex items-center gap-1.5"
+                  href={safeMailto}
+                  className="text-base sm:text-xl font-medium text-zinc-100 hover:text-primary transition-colors inline-flex items-center gap-1.5 break-all"
                 >
                   {config.contactEmail}
-                  <ArrowUpRight className="w-4 h-4 text-primary" />
+                  <ArrowUpRight className="w-4 h-4 text-primary shrink-0" />
                 </a>
               </div>
             )}
@@ -90,7 +100,7 @@ export default function Footer() {
                     target={item.href.startsWith("mailto:") ? undefined : "_blank"}
                     rel={item.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
                     aria-label={item.label}
-                    className="w-9 h-9 rounded-lg border border-white/10 flex items-center justify-center text-zinc-400 hover:border-primary/50 hover:text-primary transition-colors"
+                    className="w-11 h-11 rounded-lg border border-white/10 flex items-center justify-center text-zinc-400 hover:border-primary/50 hover:text-primary transition-colors"
                   >
                     <item.icon className="w-4 h-4" />
                   </a>
@@ -142,9 +152,12 @@ export default function Footer() {
               </ul>
             </div>
 
-            <div className="space-y-4">
-              <h4 className="text-xs font-medium text-zinc-500">Governance</h4>
+            <div className="col-span-2 sm:col-span-1 space-y-4">
+              <h4 className="text-xs font-medium text-zinc-500">Core Values</h4>
               <div className="space-y-2.5 text-sm">
+                <p className="text-zinc-300 text-xs font-medium tracking-wide">
+                  DISCIPLINE · CONSISTENCY · TRANSPARENCY · GROWTH
+                </p>
                 <p className="text-zinc-400 leading-relaxed text-xs">
                   {config.mission}
                 </p>
@@ -160,9 +173,14 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white/10 mt-14 pt-7 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-zinc-500">
-          <p>© {new Date().getFullYear()} {config.companyName || "ELITE GROUP"}. All rights reserved.</p>
-          <p>Dhaka · Dubai · London · Singapore</p>
+        <div className="border-t border-white/10 mt-12 pt-6 space-y-4">
+          <p className="text-[11px] text-zinc-500 leading-relaxed max-w-4xl">
+            Risk Disclaimer: Trading involves substantial financial risk. Past performance does not guarantee future results. Visitors should make independent financial decisions.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs text-zinc-500">
+            <p>© {new Date().getFullYear()} {brandDisplayName}. All rights reserved.</p>
+            <p>Dhaka · Dubai · London · Singapore</p>
+          </div>
         </div>
       </div>
     </footer>

@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Linkedin, Twitter, Mail } from "lucide-react";
+import { sanitizeHref, sanitizeImageSrc } from "@/lib/utils";
+import { usePageSeo } from "../hooks/usePageSeo";
 import { getTeam } from "../services/firebase";
 import {
   DEFAULT_TEAM,
@@ -11,6 +13,13 @@ import { SpotlightCard } from "../components/motion/SpotlightCard";
 import { EASE_OUT_EXPO, TextMaskReveal } from "../components/motion/MotionPrimitives";
 
 export default function Team() {
+  usePageSeo({
+    title: "Founder & Team",
+    description:
+      "Meet the Founder and core Team Members of GLOBAL ELITE 1M TEAM (ELITE TEAM 07).",
+    path: "/team",
+  });
+
   const [teamMembers, setTeamMembers] = useState<any[]>(
     normalizeTeamMembers(DEFAULT_TEAM)
   );
@@ -25,6 +34,10 @@ export default function Team() {
 
   const founder = teamMembers.find((m) => isFounderMember(m));
   const members = teamMembers.filter((m) => !isFounderMember(m));
+  const founderImg = sanitizeImageSrc(founder?.image);
+  const founderLinkedIn = sanitizeHref(founder?.linkedin);
+  const founderTwitter = sanitizeHref(founder?.twitter);
+  const founderMail = sanitizeHref(founder?.email ? `mailto:${founder.email}` : "");
 
   return (
     <div className="space-y-14 pb-16">
@@ -35,7 +48,7 @@ export default function Team() {
           transition={{ duration: 0.5, ease: EASE_OUT_EXPO }}
           className="text-xs font-semibold uppercase tracking-[0.24em] text-primary"
         >
-          ELITE TEAM 07
+          GLOBAL ELITE 1M TEAM · ELITE TEAM 07
         </motion.p>
         <h1 className="font-heading text-4xl md:text-6xl font-semibold tracking-tight gold-gradient">
           <TextMaskReveal immediate delay={0.05}>
@@ -48,7 +61,7 @@ export default function Team() {
           transition={{ duration: 0.6, delay: 0.14, ease: EASE_OUT_EXPO }}
           className="text-base md:text-lg text-zinc-400 leading-relaxed"
         >
-          Led by our Founder alongside a unified team of builders executing together across ELITE GROUP.
+          Led by our Founder alongside a unified team of builders executing together across GLOBAL ELITE 1M TEAM.
         </motion.p>
       </div>
 
@@ -62,11 +75,22 @@ export default function Team() {
           <SpotlightCard active className="p-8 sm:p-10 bg-[#0b0b10]">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
               <div className="flex items-start sm:items-center gap-6">
-                <div className="w-16 h-16 rounded-2xl border border-primary/40 bg-primary/10 flex items-center justify-center shrink-0">
-                  <span className="font-heading text-xl font-semibold text-primary tracking-tight">
-                    {founder.initials}
-                  </span>
-                </div>
+                {founderImg ? (
+                  <img
+                    src={founderImg}
+                    alt={founder.name}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-16 h-16 rounded-2xl border border-primary/40 object-cover shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl border border-primary/40 bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="font-heading text-xl font-semibold text-primary tracking-tight">
+                      {founder.initials}
+                    </span>
+                  </div>
+                )}
                 <div className="space-y-1.5">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
                     Founder
@@ -84,35 +108,35 @@ export default function Team() {
                   </p>
                 )}
 
-                {(founder.linkedin || founder.twitter || founder.email) && (
+                {(founderLinkedIn || founderTwitter || founderMail) && (
                   <div className="flex items-center gap-3 pt-2">
-                    {founder.linkedin && (
+                    {founderLinkedIn && (
                       <a
-                        href={founder.linkedin}
+                        href={founderLinkedIn}
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`${founder.name} LinkedIn`}
-                        className="p-2 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors"
+                        className="w-11 h-11 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors flex items-center justify-center"
                       >
                         <Linkedin className="w-4 h-4" />
                       </a>
                     )}
-                    {founder.twitter && (
+                    {founderTwitter && (
                       <a
-                        href={founder.twitter}
+                        href={founderTwitter}
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={`${founder.name} Twitter`}
-                        className="p-2 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors"
+                        className="w-11 h-11 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors flex items-center justify-center"
                       >
                         <Twitter className="w-4 h-4" />
                       </a>
                     )}
-                    {founder.email && (
+                    {founderMail && (
                       <a
-                        href={`mailto:${founder.email}`}
+                        href={founderMail}
                         aria-label={`Email ${founder.name}`}
-                        className="p-2 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors"
+                        className="w-11 h-11 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors flex items-center justify-center"
                       >
                         <Mail className="w-4 h-4" />
                       </a>
@@ -126,82 +150,100 @@ export default function Team() {
       )}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-6">
-        {members.map((member, i) => (
-          <motion.article
-            key={member.id || i}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.15 }}
-            transition={{ duration: 0.55, delay: i * 0.08, ease: EASE_OUT_EXPO }}
-            className="h-full"
-          >
-            <SpotlightCard className="p-7 sm:p-8 h-full flex flex-col justify-between gap-6 bg-[#0a0a0e]">
-              <div className="space-y-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/[0.03] flex items-center justify-center shrink-0">
-                    <span className="font-heading text-base font-semibold text-zinc-200">
-                      {member.initials}
+        {members.map((member, i) => {
+          const memberImg = sanitizeImageSrc(member?.image);
+          const linkedInHref = sanitizeHref(member?.linkedin);
+          const twitterHref = sanitizeHref(member?.twitter);
+          const mailHref = sanitizeHref(member?.email ? `mailto:${member.email}` : "");
+
+          return (
+            <motion.article
+              key={member.id || i}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.55, delay: i * 0.08, ease: EASE_OUT_EXPO }}
+              className="h-full"
+            >
+              <SpotlightCard className="p-7 sm:p-8 h-full flex flex-col justify-between gap-6 bg-[#0a0a0e]">
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between gap-4">
+                    {memberImg ? (
+                      <img
+                        src={memberImg}
+                        alt={member.name}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-12 h-12 rounded-xl border border-white/10 object-cover shrink-0"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl border border-white/10 bg-white/[0.03] flex items-center justify-center shrink-0">
+                        <span className="font-heading text-base font-semibold text-zinc-200">
+                          {member.initials}
+                        </span>
+                      </div>
+                    )}
+                    <span className="font-mono text-xs text-zinc-600 tabular-nums">
+                      {String(i + 1).padStart(2, "0")}
                     </span>
                   </div>
-                  <span className="font-mono text-xs text-zinc-600 tabular-nums">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
+
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-zinc-500">
+                      Team Member
+                    </p>
+                    <h2 className="font-heading text-2xl font-semibold text-zinc-50">
+                      {member.name}
+                    </h2>
+                  </div>
+
+                  {member.bio && (
+                    <p className="text-sm text-zinc-400 leading-relaxed">
+                      {member.bio}
+                    </p>
+                  )}
                 </div>
 
-                <div className="space-y-1">
-                  <p className="text-xs font-medium text-zinc-500">
-                    Team Member
-                  </p>
-                  <h2 className="font-heading text-2xl font-semibold text-zinc-50">
-                    {member.name}
-                  </h2>
-                </div>
-
-                {member.bio && (
-                  <p className="text-sm text-zinc-400 leading-relaxed">
-                    {member.bio}
-                  </p>
+                {(linkedInHref || twitterHref || mailHref) && (
+                  <div className="flex items-center gap-3 pt-4 border-t border-white/[0.07]">
+                    {linkedInHref && (
+                      <a
+                        href={linkedInHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${member.name} LinkedIn`}
+                        className="w-11 h-11 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors flex items-center justify-center"
+                      >
+                        <Linkedin className="w-4 h-4" />
+                      </a>
+                    )}
+                    {twitterHref && (
+                      <a
+                        href={twitterHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${member.name} Twitter`}
+                        className="w-11 h-11 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors flex items-center justify-center"
+                      >
+                        <Twitter className="w-4 h-4" />
+                      </a>
+                    )}
+                    {mailHref && (
+                      <a
+                        href={mailHref}
+                        aria-label={`Email ${member.name}`}
+                        className="w-11 h-11 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors flex items-center justify-center"
+                      >
+                        <Mail className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
                 )}
-              </div>
-
-              {(member.linkedin || member.twitter || member.email) && (
-                <div className="flex items-center gap-3 pt-4 border-t border-white/[0.07]">
-                  {member.linkedin && (
-                    <a
-                      href={member.linkedin}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`${member.name} LinkedIn`}
-                      className="p-2 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors"
-                    >
-                      <Linkedin className="w-4 h-4" />
-                    </a>
-                  )}
-                  {member.twitter && (
-                    <a
-                      href={member.twitter}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`${member.name} Twitter`}
-                      className="p-2 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors"
-                    >
-                      <Twitter className="w-4 h-4" />
-                    </a>
-                  )}
-                  {member.email && (
-                    <a
-                      href={`mailto:${member.email}`}
-                      aria-label={`Email ${member.name}`}
-                      className="p-2 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors"
-                    >
-                      <Mail className="w-4 h-4" />
-                    </a>
-                  )}
-                </div>
-              )}
-            </SpotlightCard>
-          </motion.article>
-        ))}
+              </SpotlightCard>
+            </motion.article>
+          );
+        })}
       </div>
     </div>
   );

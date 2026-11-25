@@ -2,11 +2,18 @@ import { motion } from "framer-motion";
 import { Layers, Zap, Trophy } from "lucide-react";
 import { useSiteConfig } from "../context/SiteContext";
 import { LOCAL_ASSETS } from "../lib/defaults";
+import { usePageSeo } from "../hooks/usePageSeo";
 import { AnimatedCounter } from "../components/motion/AnimatedCounter";
 import { SpotlightCard } from "../components/motion/SpotlightCard";
 import { EASE_OUT_EXPO, ParallaxFrame, TextMaskReveal } from "../components/motion/MotionPrimitives";
 
 export default function Vision() {
+  usePageSeo({
+    title: "Vision 2030",
+    description:
+      "Long-term 2030 valuation target, ecosystem divisions, and global expansion corridors of GLOBAL ELITE 1M TEAM.",
+    path: "/vision",
+  });
   const { config } = useSiteConfig();
 
   const numericNetWorth = parseFloat(String(config.netWorth || "12450").replace(/,/g, "")) || 12450;
@@ -138,6 +145,8 @@ export default function Vision() {
           <img
             src={LOCAL_ASSETS.globalNetwork}
             alt="Global expansion corridors"
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 w-full h-full object-cover opacity-35"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#09090b] via-[#09090b]/85 to-[#09090b]/60" />

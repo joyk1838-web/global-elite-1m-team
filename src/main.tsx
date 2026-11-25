@@ -5,15 +5,18 @@ import App from './App.tsx';
 import './index.css';
 import { AuthProvider } from './context/AuthContext';
 import { SiteProvider } from './context/SiteContext';
+import { ErrorBoundary } from './components/layout/ErrorBoundary';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MotionConfig reducedMotion="user">
-      <AuthProvider>
-        <SiteProvider>
-          <App />
-        </SiteProvider>
-      </AuthProvider>
-    </MotionConfig>
+    <ErrorBoundary>
+      <MotionConfig reducedMotion="user">
+        <AuthProvider>
+          <SiteProvider>
+            <App />
+          </SiteProvider>
+        </AuthProvider>
+      </MotionConfig>
+    </ErrorBoundary>
   </StrictMode>,
 );

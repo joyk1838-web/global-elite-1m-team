@@ -1,13 +1,22 @@
 import { motion } from "framer-motion";
 import { Maximize2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { sanitizeImageSrc } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { usePageSeo } from "../hooks/usePageSeo";
 import { getGallery } from "../services/firebase";
 import { DEFAULT_GALLERY, LOCAL_ASSETS } from "../lib/defaults";
 
 import { EASE_OUT_EXPO, TextMaskReveal } from "../components/motion/MotionPrimitives";
 
 export default function Gallery() {
+  usePageSeo({
+    title: "Visual Archive & Gallery",
+    description:
+      "Visual archive showcasing Series 01, leadership, and ventures of GLOBAL ELITE 1M TEAM.",
+    path: "/gallery",
+  });
+
   const [photos, setPhotos] = useState<any[]>(DEFAULT_GALLERY);
   const [filter, setFilter] = useState("All");
 
@@ -102,8 +111,10 @@ export default function Gallery() {
                 }
               >
                 <img
-                  src={photo.url}
+                  src={sanitizeImageSrc(photo.url, LOCAL_ASSETS.corporateHq)}
                   alt={photo.title}
+                  loading="lazy"
+                  decoding="async"
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   referrerPolicy="no-referrer"
                   onError={(e) => {
@@ -123,8 +134,9 @@ export default function Gallery() {
               <DialogContent className="max-w-4xl p-0 overflow-hidden bg-[#09090b] border border-white/10">
                 <DialogTitle className="sr-only">{photo.title}</DialogTitle>
                 <img
-                  src={photo.url}
+                  src={sanitizeImageSrc(photo.url, LOCAL_ASSETS.corporateHq)}
                   alt={photo.title}
+                  decoding="async"
                   className="w-full h-auto max-h-[80vh] object-contain bg-black"
                   referrerPolicy="no-referrer"
                   onError={(e) => {

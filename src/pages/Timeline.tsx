@@ -3,6 +3,7 @@ import { Milestone, Flag, Rocket, Shield, Crown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { getTimeline } from "../services/firebase";
 import { DEFAULT_TIMELINE } from "../lib/defaults";
+import { usePageSeo } from "../hooks/usePageSeo";
 import { SpotlightCard } from "../components/motion/SpotlightCard";
 import { EASE_OUT_EXPO, TextMaskReveal } from "../components/motion/MotionPrimitives";
 
@@ -15,6 +16,13 @@ const iconMap: Record<string, any> = {
 };
 
 export default function Timeline() {
+  usePageSeo({
+    title: "Corporate Roadmap",
+    description:
+      "Multi-year strategic roadmap and growth phases of GLOBAL ELITE 1M TEAM from 2025 through 2030.",
+    path: "/timeline",
+  });
+
   const [events, setEvents] = useState<any[]>(DEFAULT_TIMELINE);
   const timelineRef = useRef<HTMLDivElement | null>(null);
   const { scrollYProgress } = useScroll({

@@ -15,10 +15,23 @@ service cloud.firestore {
       return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    function isSafeUrlOrEmpty(val, maxLen) {
+      return val is string && val.size() <= maxLen && (
+        val == '' ||
+        val.matches('^https?://.*$') ||
+        val.matches('^/[^/].*$') ||
+        val.matches('^data:image/(jpeg|jpg|png|webp|gif);base64,[a-zA-Z0-9+/=]+$')
+      );
+    }
+
     function isValidBrand(data) {
       return data.keys().hasAll(['name', 'image', 'order']) &&
+             data.keys().hasOnly(['id', 'name', 'tagline', 'image', 'link', 'desc', 'order']) &&
              data.name is string && data.name.size() > 0 && data.name.size() <= 120 &&
-             data.image is string && data.image.size() > 0 && data.image.size() <= 350000 &&
+             isSafeUrlOrEmpty(data.image, 350000) && data.image.size() > 0 &&
+             (!('tagline' in data) || (data.tagline is string && data.tagline.size() <= 160)) &&
+             (!('link' in data) || isSafeUrlOrEmpty(data.link, 300)) &&
+             (!('desc' in data) || (data.desc is string && data.desc.size() <= 1200)) &&
              data.order is number;
     }
 
@@ -28,40 +41,95 @@ service cloud.firestore {
              data.name is string && data.name.size() > 0 && data.name.size() <= 120 &&
              data.role is string && data.role.size() > 0 && data.role.size() <= 120 &&
              (!('bio' in data) || (data.bio is string && data.bio.size() <= 2000)) &&
-             (!('image' in data) || (data.image is string && data.image.size() <= 350000)) &&
+             (!('image' in data) || isSafeUrlOrEmpty(data.image, 350000)) &&
              (!('badges' in data) || (data.badges is list && data.badges.size() <= 10 && (data.badges.size() == 0 || data.badges[0] is string))) &&
              (!('initials' in data) || (data.initials is string && data.initials.size() <= 16)) &&
              (!('email' in data) || (data.email is string && data.email.size() <= 200)) &&
-             (!('linkedin' in data) || (data.linkedin is string && data.linkedin.size() <= 500)) &&
-             (!('twitter' in data) || (data.twitter is string && data.twitter.size() <= 500)) &&
+             (!('linkedin' in data) || isSafeUrlOrEmpty(data.linkedin, 500)) &&
+             (!('twitter' in data) || isSafeUrlOrEmpty(data.twitter, 500)) &&
              data.order is number;
     }
 
     function isValidGalleryItem(data) {
       return data.keys().hasAll(['url', 'title', 'uploadedAt']) &&
-             data.url is string && data.url.size() > 0 && data.url.size() <= 350000 &&
-             data.title is string && data.title.size() > 0 && data.title.size() <= 120;
+             data.keys().hasOnly(['id', 'url', 'title', 'category', 'uploadedAt']) &&
+             isSafeUrlOrEmpty(data.url, 350000) && data.url.size() > 0 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 160 &&
+             (!('category' in data) || (data.category is string && data.category.size() <= 80)) &&
+             data.uploadedAt is string && data.uploadedAt.size() <= 64;
     }
 
     function isValidTimeline(data) {
       return data.keys().hasAll(['year', 'title', 'status', 'order']) &&
-             data.year is string &&
-             data.title is string &&
-             data.status is string &&
+             data.keys().hasOnly(['id', 'year', 'title', 'desc', 'icon', 'status', 'order']) &&
+             data.year is string && data.year.size() > 0 && data.year.size() <= 32 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 160 &&
+             (!('desc' in data) || (data.desc is string && data.desc.size() <= 1200)) &&
+             (!('icon' in data) || (data.icon is string && data.icon.size() <= 40)) &&
+             data.status in ['completed', 'current', 'upcoming'] &&
              data.order is number;
     }
 
     function isValidMilestone(data) {
       return data.keys().hasAll(['title', 'completed', 'order']) &&
-             data.title is string &&
+             data.keys().hasOnly(['id', 'title', 'description', 'date', 'completed', 'order']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 160 &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 1200)) &&
+             (!('date' in data) || (data.date is string && data.date.size() <= 64)) &&
              data.completed is bool &&
              data.order is number;
     }
 
     function isValidGrowth(data) {
       return data.keys().hasAll(['month', 'amount']) &&
-             data.month is string &&
-             data.amount is number;
+             data.keys().hasOnly(['id', 'month', 'amount', 'order']) &&
+             data.month is string && data.month.size() > 0 && data.month.size() <= 64 &&
+             data.amount is number &&
+             (!('order' in data) || data.order is number);
+    }
+
+    function isValidTradeRecord(data) {
+      return data.keys().hasAll(['date', 'entryType', 'order']) &&
+             data.keys().hasOnly(['id', 'date', 'symbol', 'entryType', 'pnl', 'amount', 'notes', 'order']) &&
+             data.date is string && data.date.size() > 0 && data.date.size() <= 64 &&
+             data.entryType in ['trade', 'deposit', 'withdrawal'] &&
+             (!('symbol' in data) || (data.symbol is string && data.symbol.size() <= 64)) &&
+             (!('pnl' in data) || data.pnl is number) &&
+             (!('amount' in data) || data.amount is number) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+             data.order is number;
+    }
+
+    function isValidSiteConfig(data) {
+      return data.keys().hasOnly([
+               'companyName', 'tagline', 'heroEyebrow', 'heroTitle', 'heroSubtitle',
+               'mission', 'vision', 'mdName', 'mdRole', 'mdImage', 'mdQuote',
+               'mdBannerQuote', 'totalRevenue', 'netWorth', 'multiplier', 'status',
+               'activeUnits', 'valuationTarget', 'contactEmail', 'linkedinUrl',
+               'twitterUrl', 'instagramUrl'
+             ]) &&
+             (!('companyName' in data) || (data.companyName is string && data.companyName.size() <= 120)) &&
+             (!('tagline' in data) || (data.tagline is string && data.tagline.size() <= 200)) &&
+             (!('heroEyebrow' in data) || (data.heroEyebrow is string && data.heroEyebrow.size() <= 200)) &&
+             (!('heroTitle' in data) || (data.heroTitle is string && data.heroTitle.size() <= 200)) &&
+             (!('heroSubtitle' in data) || (data.heroSubtitle is string && data.heroSubtitle.size() <= 1200)) &&
+             (!('mission' in data) || (data.mission is string && data.mission.size() <= 1200)) &&
+             (!('vision' in data) || (data.vision is string && data.vision.size() <= 1200)) &&
+             (!('mdName' in data) || (data.mdName is string && data.mdName.size() <= 120)) &&
+             (!('mdRole' in data) || (data.mdRole is string && data.mdRole.size() <= 120)) &&
+             (!('mdImage' in data) || isSafeUrlOrEmpty(data.mdImage, 350000)) &&
+             (!('mdQuote' in data) || (data.mdQuote is string && data.mdQuote.size() <= 1000)) &&
+             (!('mdBannerQuote' in data) || (data.mdBannerQuote is string && data.mdBannerQuote.size() <= 1500)) &&
+             (!('totalRevenue' in data) || (data.totalRevenue is string && data.totalRevenue.size() <= 64)) &&
+             (!('netWorth' in data) || (data.netWorth is string && data.netWorth.size() <= 64)) &&
+             (!('multiplier' in data) || (data.multiplier is string && data.multiplier.size() <= 32)) &&
+             (!('status' in data) || (data.status is string && data.status.size() <= 80)) &&
+             (!('activeUnits' in data) || (data.activeUnits is string && data.activeUnits.size() <= 32)) &&
+             (!('valuationTarget' in data) || (data.valuationTarget is string && data.valuationTarget.size() <= 64)) &&
+             (!('contactEmail' in data) || (data.contactEmail is string && data.contactEmail.size() <= 200)) &&
+             (!('linkedinUrl' in data) || isSafeUrlOrEmpty(data.linkedinUrl, 500)) &&
+             (!('twitterUrl' in data) || isSafeUrlOrEmpty(data.twitterUrl, 500)) &&
+             (!('instagramUrl' in data) || isSafeUrlOrEmpty(data.instagramUrl, 500));
     }
 
     match /{document=**} {
@@ -70,8 +138,8 @@ service cloud.firestore {
 
     match /brands/{brandId} {
       allow read: if true;
-      allow create, update: if isAdmin() && isValidBrand(request.resource.data);
-      allow delete: if isAdmin();
+      allow create, update: if isAdmin() && isValidId(brandId) && isValidBrand(request.resource.data);
+      allow delete: if isAdmin() && isValidId(brandId);
     }
 
     match /team/{memberId} {
@@ -82,31 +150,38 @@ service cloud.firestore {
 
     match /gallery/{itemId} {
       allow read: if true;
-      allow create, update: if isAdmin() && isValidGalleryItem(request.resource.data);
-      allow delete: if isAdmin();
+      allow create, update: if isAdmin() && isValidId(itemId) && isValidGalleryItem(request.resource.data);
+      allow delete: if isAdmin() && isValidId(itemId);
     }
 
     match /timeline/{eventId} {
       allow read: if true;
-      allow create, update: if isAdmin() && isValidTimeline(request.resource.data);
-      allow delete: if isAdmin();
+      allow create, update: if isAdmin() && isValidId(eventId) && isValidTimeline(request.resource.data);
+      allow delete: if isAdmin() && isValidId(eventId);
     }
 
     match /milestones/{milestoneId} {
       allow read: if true;
-      allow create, update: if isAdmin() && isValidMilestone(request.resource.data);
-      allow delete: if isAdmin();
+      allow create, update: if isAdmin() && isValidId(milestoneId) && isValidMilestone(request.resource.data);
+      allow delete: if isAdmin() && isValidId(milestoneId);
     }
 
     match /growth/{growthId} {
       allow read: if true;
-      allow create, update: if isAdmin() && isValidGrowth(request.resource.data);
-      allow delete: if isAdmin();
+      allow create, update: if isAdmin() && isValidId(growthId) && isValidGrowth(request.resource.data);
+      allow delete: if isAdmin() && isValidId(growthId);
+    }
+
+    match /trades/{tradeId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidId(tradeId) && isValidTradeRecord(request.resource.data);
+      allow delete: if isAdmin() && isValidId(tradeId);
     }
 
     match /config/{configId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create, update: if isAdmin() && isValidId(configId) && isValidSiteConfig(request.resource.data);
+      allow delete: if isAdmin() && isValidId(configId);
     }
   }
 }

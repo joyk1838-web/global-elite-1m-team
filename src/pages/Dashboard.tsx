@@ -20,8 +20,17 @@ import {
   CheckCircle2,
   Circle,
   ArrowUpRight,
+  ShieldAlert,
+  Activity,
 } from "lucide-react";
-import { getGrowthData, getMilestones } from "../services/firebase";
+import { sanitizeImageSrc } from "@/lib/utils";
+import { usePageSeo } from "../hooks/usePageSeo";
+import {
+  getGrowthData,
+  getMilestones,
+  getTrades,
+  type TradeRecord,
+} from "../services/firebase";
 import { useSiteConfig } from "../context/SiteContext";
 import { useExecutiveChat } from "../context/ChatContext";
 import {
@@ -98,6 +107,13 @@ function CustomChartTooltip({
 }
 
 export default function Dashboard() {
+  usePageSeo({
+    title: "Progress & Performance Dashboard",
+    description:
+      "Transparent capital progression, live reported snapshot, historical monthly performance, and trading risk disclosure for GLOBAL ELITE 1M TEAM.",
+    path: "/dashboard",
+  });
+
   const { config } = useSiteConfig();
   const { openChat } = useExecutiveChat();
 
@@ -105,6 +121,7 @@ export default function Dashboard() {
     DEFAULT_GROWTH.map((g) => ({ name: g.month, amount: Number(g.amount) || 0 }))
   );
   const [milestones, setMilestones] = useState<any[]>(DEFAULT_MILESTONES);
+  const [trades, setTrades] = useState<TradeRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [timeframe, setTimeframe] = useState<TimeframeOption>("all");
@@ -116,7 +133,11 @@ export default function Dashboard() {
     let active = true;
     const fetchData = async () => {
       try {
-        const [gData, mData] = await Promise.all([getGrowthData(), getMilestones()]);
+        const [gData, mData, tData] = await Promise.all([
+          getGrowthData(),
+          getMilestones(),
+          getTrades(),
+        ]);
         if (!active) return;
         if (gData && gData.length > 0) {
           setRawRevenue(
@@ -128,6 +149,9 @@ export default function Dashboard() {
         }
         if (mData && mData.length > 0) {
           setMilestones(mData);
+        }
+        if (tData && tData.length > 0) {
+          setTrades(tData);
         }
       } catch (e) {
         console.warn("Using default progress metrics", e);
@@ -187,13 +211,82 @@ export default function Dashboard() {
   const completedCount = milestones.filter((m) => Boolean(m.completed)).length;
   const chartDataKey = chartMode === "cumulative" ? "cumulative" : "amount";
 
+  const ledgerStats = useMemo(() => {
+    const ordered = [...trades].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    let startingBalance: number | null = null;
+    let runningBalance = 0;
+    let totalDeposits = 0;
+    let totalWithdrawals = 0;
+    let totalPnl = 0;
+    let totalTrades = 0;
+    let winningTrades = 0;
+    let losingTrades = 0;
+    let peakBalance = 0;
+    let maxDrawdownDollar = 0;
+    let maxDrawdownPct = 0;
+
+    for (const entry of ordered) {
+      if (entry.entryType === "deposit") {
+        const amt = Number(entry.amount ?? entry.pnl ?? 0);
+        if (startingBalance === null) startingBalance = amt;
+        totalDeposits += amt;
+        runningBalance += amt;
+      } else if (entry.entryType === "withdrawal") {
+        const amt = Number(entry.amount ?? entry.pnl ?? 0);
+        totalWithdrawals += amt;
+        runningBalance -= amt;
+      } else {
+        const pnl = Number(entry.pnl ?? 0);
+        totalTrades += 1;
+        if (pnl > 0) winningTrades += 1;
+        else if (pnl < 0) losingTrades += 1;
+        totalPnl += pnl;
+        runningBalance += pnl;
+      }
+
+      if (runningBalance > peakBalance) {
+        peakBalance = runningBalance;
+      }
+      if (peakBalance > 0) {
+        const ddDollar = Math.max(0, peakBalance - runningBalance);
+        const ddPct = (ddDollar / peakBalance) * 100;
+        if (ddDollar > maxDrawdownDollar) maxDrawdownDollar = ddDollar;
+        if (ddPct > maxDrawdownPct) maxDrawdownPct = ddPct;
+      }
+    }
+
+    const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : null;
+
+    return {
+      hasRecords: ordered.length > 0,
+      ordered,
+      startingBalance,
+      currentBalance: runningBalance,
+      totalPnl,
+      totalTrades,
+      winningTrades,
+      losingTrades,
+      winRate,
+      totalDeposits,
+      totalWithdrawals,
+      maxDrawdownDollar,
+      maxDrawdownPct,
+    };
+  }, [trades]);
+
+  const formatUsd = (val: number) =>
+    `${val < 0 ? "-" : ""}$${Math.abs(val).toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    })}`;
+
   return (
     <div className="space-y-10 pb-20">
       {/* Header + Working Timeframe Switcher */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-white/[0.08] pb-8">
         <div className="space-y-2.5 max-w-2xl">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-primary">
-            Performance Overview · {config.status || "Foundation"} Phase
+            Live Reported Snapshot & Historical Series · {config.status || "Foundation"} Phase
           </p>
           <h1 className="font-heading text-4xl sm:text-5xl font-semibold tracking-tight gold-gradient">
             <TextMaskReveal immediate delay={0.04}>
@@ -201,7 +294,7 @@ export default function Dashboard() {
             </TextMaskReveal>
           </h1>
           <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-            Real-time capital progression, revenue velocity, and verified milestones toward our $
+            Distinguishing live reported enterprise equity from historical monthly revenue records and verified ledger performance toward our $
             {config.valuationTarget || "1,000,000"} objective.
           </p>
         </div>
@@ -419,11 +512,16 @@ export default function Dashboard() {
         <SpotlightCard tilt={false} className="p-6 sm:p-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.07] pb-5">
             <div className="space-y-1">
-              <h2 className="font-heading text-2xl font-semibold text-zinc-50">
-                Revenue & Capital Progression
-              </h2>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h2 className="font-heading text-2xl font-semibold text-zinc-50">
+                  Historical Monthly Performance
+                </h2>
+                <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 border border-white/10 rounded-md px-2 py-0.5">
+                  Historical Series
+                </span>
+              </div>
               <p className="text-xs sm:text-sm text-zinc-400">
-                Chronological enterprise revenue progression across recorded periods
+                Chronological historical revenue periods recorded in the organization series
               </p>
             </div>
 
@@ -639,8 +737,10 @@ export default function Dashboard() {
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={SERIES_ONE_ASSETS[activeSeriesSlide]?.id}
-                    src={SERIES_ONE_ASSETS[activeSeriesSlide]?.url}
+                    src={sanitizeImageSrc(SERIES_ONE_ASSETS[activeSeriesSlide]?.url, LOCAL_ASSETS.corporateHq)}
                     alt={SERIES_ONE_ASSETS[activeSeriesSlide]?.title}
+                    loading="lazy"
+                    decoding="async"
                     initial={{ opacity: 0, scale: 1.03, filter: "blur(5px)" }}
                     animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
                     exit={{ opacity: 0, scale: 0.99, filter: "blur(4px)" }}
@@ -654,6 +754,142 @@ export default function Dashboard() {
                 </AnimatePresence>
               </div>
             </div>
+          </div>
+        </SpotlightCard>
+      </motion.div>
+
+      {/* Trading Performance & Transparency Section (Calculated strictly from real Firestore trades records) */}
+      <motion.div
+        initial={{ opacity: 0, y: 22 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={SCROLL_VIEWPORT}
+        transition={{ duration: 0.65, ease: EASE_OUT_EXPO }}
+      >
+        <SpotlightCard tilt={false} className="p-6 sm:p-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.07] pb-5">
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <Activity className="w-5 h-5 text-primary shrink-0" />
+                <h2 className="font-heading text-2xl font-semibold text-zinc-50">
+                  Trading Performance & Transparency
+                </h2>
+                <span className="text-[11px] font-mono uppercase tracking-wider text-primary border border-primary/30 rounded-md px-2 py-0.5">
+                  {ledgerStats.hasRecords ? "Live Verified Ledger" : "Awaiting Trade Entries"}
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-zinc-400">
+                All metrics below are calculated directly from verified ledger records in the database — zero simulated returns.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            {[
+              {
+                label: "Starting Balance",
+                value: ledgerStats.startingBalance !== null ? formatUsd(ledgerStats.startingBalance) : "Not Yet Recorded",
+              },
+              {
+                label: "Current Balance",
+                value: ledgerStats.hasRecords ? formatUsd(ledgerStats.currentBalance) : "Not Yet Recorded",
+              },
+              {
+                label: "Total Profit / Loss",
+                value: ledgerStats.hasRecords ? formatUsd(ledgerStats.totalPnl) : "Not Yet Recorded",
+              },
+              {
+                label: "Total Trades",
+                value: ledgerStats.hasRecords ? String(ledgerStats.totalTrades) : "0",
+              },
+              {
+                label: "Win Rate",
+                value: ledgerStats.winRate !== null ? `${ledgerStats.winRate.toFixed(1)}%` : "Not Yet Recorded",
+              },
+              {
+                label: "Winning Trades",
+                value: ledgerStats.hasRecords ? String(ledgerStats.winningTrades) : "0",
+              },
+              {
+                label: "Losing Trades",
+                value: ledgerStats.hasRecords ? String(ledgerStats.losingTrades) : "0",
+              },
+              {
+                label: "Deposits",
+                value: ledgerStats.hasRecords ? formatUsd(ledgerStats.totalDeposits) : "$0",
+              },
+              {
+                label: "Withdrawals",
+                value: ledgerStats.hasRecords ? formatUsd(ledgerStats.totalWithdrawals) : "$0",
+              },
+              {
+                label: "Maximum Drawdown",
+                value: ledgerStats.hasRecords
+                  ? `${formatUsd(ledgerStats.maxDrawdownDollar)} (${ledgerStats.maxDrawdownPct.toFixed(1)}%)`
+                  : "Not Yet Recorded",
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="rounded-xl border border-white/[0.07] bg-[#07070a] p-4 space-y-1.5"
+              >
+                <p className="text-[11px] font-medium text-zinc-500">{item.label}</p>
+                <p className="font-mono text-sm sm:text-base font-semibold text-zinc-100 tabular-nums break-words">
+                  {item.value}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {ledgerStats.hasRecords ? (
+            <div className="overflow-x-auto border border-white/[0.07] rounded-xl">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-white/[0.03] text-zinc-400 border-b border-white/[0.07]">
+                  <tr>
+                    <th className="py-3 px-4 font-medium">Date</th>
+                    <th className="py-3 px-4 font-medium">Type</th>
+                    <th className="py-3 px-4 font-medium">Instrument / Ref</th>
+                    <th className="py-3 px-4 font-medium text-right">Amount / P&L</th>
+                    <th className="py-3 px-4 font-medium">Notes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.05]">
+                  {ledgerStats.ordered.map((entry) => {
+                    const value = entry.entryType === "trade" ? Number(entry.pnl ?? 0) : Number(entry.amount ?? 0);
+                    return (
+                      <tr key={entry.id} className="hover:bg-white/[0.02]">
+                        <td className="py-2.5 px-4 font-mono text-zinc-300 whitespace-nowrap">{entry.date}</td>
+                        <td className="py-2.5 px-4 capitalize text-zinc-400">{entry.entryType}</td>
+                        <td className="py-2.5 px-4 text-zinc-200">{entry.symbol || "—"}</td>
+                        <td
+                          className={`py-2.5 px-4 font-mono text-right tabular-nums ${
+                            entry.entryType === "withdrawal"
+                              ? "text-amber-300"
+                              : value >= 0
+                              ? "text-emerald-400"
+                              : "text-rose-400"
+                          }`}
+                        >
+                          {entry.entryType === "withdrawal" ? `-${formatUsd(value)}` : formatUsd(value)}
+                        </td>
+                        <td className="py-2.5 px-4 text-zinc-400">{entry.notes || "—"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-white/10 bg-[#07070a]/70 px-5 py-4 text-xs text-zinc-400 leading-relaxed">
+              No individual trade or deposit ledger entries have been published yet. Historical monthly progress records remain shown above, and verified trade-by-trade telemetry will calculate automatically as soon as live entries are recorded.
+            </div>
+          )}
+
+          {/* Explicit Risk Disclaimer */}
+          <div className="rounded-xl border border-primary/20 bg-primary/[0.04] p-4 flex items-start gap-3">
+            <ShieldAlert className="w-4 h-4 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="text-xs text-zinc-300 leading-relaxed">
+              <span className="font-semibold text-zinc-100">Risk Disclaimer:</span> Trading involves substantial financial risk. Past performance does not guarantee future results. Visitors should make independent financial decisions.
+            </p>
           </div>
         </SpotlightCard>
       </motion.div>

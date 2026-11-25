@@ -198,3 +198,47 @@ export const deleteTimelineEvent = async (eventId: string) => {
     handleFirestoreError(error, 'delete', 'timeline/' + eventId);
   }
 };
+
+// Trading Performance Ledger Services
+export interface TradeRecord {
+  id: string;
+  date: string;
+  symbol?: string;
+  entryType: 'trade' | 'deposit' | 'withdrawal';
+  pnl?: number;
+  amount?: number;
+  notes?: string;
+  order: number;
+}
+
+export const getTrades = async (): Promise<TradeRecord[]> => {
+  try {
+    const q = query(collection(db, 'trades'), orderBy('order', 'asc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((d) => ({
+      id: d.id,
+      ...(d.data() as Omit<TradeRecord, 'id'>),
+    }));
+  } catch (error) {
+    console.warn("Unable to fetch trade records from Firestore:", error);
+    return [];
+  }
+};
+
+export const saveTradeRecord = async (tradeId: string, data: Omit<TradeRecord, 'id'>) => {
+  try {
+    const docRef = doc(db, 'trades', tradeId);
+    await setDoc(docRef, data, { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, 'write', 'trades/' + tradeId);
+  }
+};
+
+export const deleteTradeRecord = async (tradeId: string) => {
+  try {
+    await deleteDoc(doc(db, 'trades', tradeId));
+  } catch (error) {
+    handleFirestoreError(error, 'delete', 'trades/' + tradeId);
+  }
+};
+
