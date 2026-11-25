@@ -119,6 +119,7 @@ export default function Footer() {
                   { label: "Mission", path: "/mission" },
                   { label: "Vision 2030", path: "/vision" },
                   { label: "Leadership", path: "/team" },
+                  { label: "Founder: MD JOY HOSSEN", path: "/md-joy-hossen" },
                 ].map((item) => (
                   <li key={item.path}>
                     <Link

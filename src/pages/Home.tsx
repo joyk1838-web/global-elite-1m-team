@@ -133,10 +133,11 @@ const CAPABILITIES: CapabilityItem[] = [
 
 export default function Home() {
   usePageSeo({
-    title: "GLOBAL ELITE 1M TEAM | One Team. One Vision. One Goal.",
+    title: "GLOBAL ELITE 1M TEAM | Founder MD JOY HOSSEN",
     description:
-      "GLOBAL ELITE 1M TEAM — disciplined trading education, Series 01 $600 to $5K challenge, transparent performance tracking, and multi-venture growth toward 2030.",
+      "GLOBAL ELITE 1M TEAM led by Founder MD JOY HOSSEN — disciplined trading education, Series 01 $600 to $5K challenge, transparent performance tracking, and multi-venture growth toward 2030.",
     path: "/",
+    image: LOCAL_ASSETS.founderPortrait,
   });
 
   const { config } = useSiteConfig();
@@ -1025,7 +1026,11 @@ export default function Home() {
             {(() => {
               const founder = teamMembers.find((m) => isFounderMember(m));
               const members = teamMembers.filter((m) => !isFounderMember(m));
-              const founderImg = sanitizeImageSrc(founder?.image);
+              const founderImg = sanitizeImageSrc(
+                founder?.image || config.mdImage,
+                LOCAL_ASSETS.founderPortrait
+              );
+              const founderName = founder?.name || "MD JOY HOSSEN";
               return (
                 <div className="space-y-6">
                   {founder && (
@@ -1041,26 +1046,38 @@ export default function Home() {
                             {founderImg ? (
                               <img
                                 src={founderImg}
-                                alt={founder.name}
+                                alt={`${founderName} — Founder of GLOBAL ELITE 1M TEAM`}
                                 loading="lazy"
                                 decoding="async"
-                                className="w-14 h-14 rounded-xl border border-primary/40 object-cover shrink-0"
+                                className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-primary/45 object-cover object-top shrink-0"
                                 referrerPolicy="no-referrer"
                               />
                             ) : (
-                              <div className="w-14 h-14 rounded-xl border border-primary/40 bg-primary/10 flex items-center justify-center shrink-0">
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-primary/40 bg-primary/10 flex items-center justify-center shrink-0">
                                 <span className="font-heading text-lg font-semibold text-primary tracking-tight">
                                   {founder.initials}
                                 </span>
                               </div>
                             )}
-                            <div className="space-y-1">
+                            <div className="space-y-1.5">
                               <p className="text-xs font-medium tracking-[0.18em] uppercase text-primary">
                                 Founder
                               </p>
                               <h3 className="font-heading text-2xl sm:text-3xl font-semibold text-zinc-50">
-                                {founder.name}
+                                <Link
+                                  to="/md-joy-hossen"
+                                  className="hover:text-primary transition-colors"
+                                >
+                                  {founderName}
+                                </Link>
                               </h3>
+                              <Link
+                                to="/md-joy-hossen"
+                                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary/90 hover:text-primary transition-colors pt-0.5"
+                              >
+                                Founder Profile
+                                <ArrowRight className="w-3 h-3" />
+                              </Link>
                             </div>
                           </div>
                           {founder.bio && (
@@ -1239,7 +1256,12 @@ export default function Home() {
               variants={fadeUpItem}
               className="text-xs font-medium tracking-widest uppercase text-primary"
             >
-              {config.mdName} · Founder · GLOBAL ELITE 1M TEAM
+              <Link to="/md-joy-hossen" className="hover:underline">
+                {config.mdName && config.mdName !== "MD Joy Hossen"
+                  ? config.mdName
+                  : "MD JOY HOSSEN"}
+              </Link>{" "}
+              · Founder · GLOBAL ELITE 1M TEAM
             </motion.p>
             <motion.div
               variants={fadeUpItem}

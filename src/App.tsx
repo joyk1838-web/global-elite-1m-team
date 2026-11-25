@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 const Mission = lazy(() => import("./pages/Mission"));
 const Vision = lazy(() => import("./pages/Vision"));
 const Team = lazy(() => import("./pages/Team"));
+const Founder = lazy(() => import("./pages/Founder"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Timeline = lazy(() => import("./pages/Timeline"));
 const Gallery = lazy(() => import("./pages/Gallery"));
@@ -32,6 +33,8 @@ export default function App() {
             <Route path="mission" element={<Mission />} />
             <Route path="vision" element={<Vision />} />
             <Route path="team" element={<Team />} />
+            <Route path="md-joy-hossen" element={<Founder />} />
+            <Route path="founder" element={<Navigate to="/md-joy-hossen" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="progress" element={<Navigate to="/dashboard" replace />} />
             <Route path="timeline" element={<Timeline />} />

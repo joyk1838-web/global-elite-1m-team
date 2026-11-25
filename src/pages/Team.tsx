@@ -1,11 +1,14 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Linkedin, Twitter, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Linkedin, Twitter, Mail, ArrowRight } from "lucide-react";
 import { sanitizeHref, sanitizeImageSrc } from "@/lib/utils";
 import { usePageSeo } from "../hooks/usePageSeo";
 import { getTeam } from "../services/firebase";
+import { useSiteConfig } from "../context/SiteContext";
 import {
   DEFAULT_TEAM,
+  LOCAL_ASSETS,
   isFounderMember,
   normalizeTeamMembers,
 } from "../lib/defaults";
@@ -13,13 +16,7 @@ import { SpotlightCard } from "../components/motion/SpotlightCard";
 import { EASE_OUT_EXPO, TextMaskReveal } from "../components/motion/MotionPrimitives";
 
 export default function Team() {
-  usePageSeo({
-    title: "Founder & Team",
-    description:
-      "Meet the Founder and core Team Members of GLOBAL ELITE 1M TEAM (ELITE TEAM 07).",
-    path: "/team",
-  });
-
+  const { config } = useSiteConfig();
   const [teamMembers, setTeamMembers] = useState<any[]>(
     normalizeTeamMembers(DEFAULT_TEAM)
   );
@@ -34,10 +31,44 @@ export default function Team() {
 
   const founder = teamMembers.find((m) => isFounderMember(m));
   const members = teamMembers.filter((m) => !isFounderMember(m));
-  const founderImg = sanitizeImageSrc(founder?.image);
+  const founderImg = sanitizeImageSrc(
+    founder?.image || config.mdImage,
+    LOCAL_ASSETS.founderPortrait
+  );
+  const founderName = founder?.name || "MD JOY HOSSEN";
   const founderLinkedIn = sanitizeHref(founder?.linkedin);
   const founderTwitter = sanitizeHref(founder?.twitter);
   const founderMail = sanitizeHref(founder?.email ? `mailto:${founder.email}` : "");
+
+  usePageSeo({
+    title: "MD JOY HOSSEN & Team | Founder & Leadership",
+    description:
+      "Meet Founder MD JOY HOSSEN and the core Team Members of GLOBAL ELITE 1M TEAM (ELITE TEAM 07).",
+    path: "/team",
+    image: founderImg,
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: "GLOBAL ELITE 1M TEAM — Founder & Team",
+      url: "https://global-elite-1m-team.vercel.app/team",
+      mainEntity: {
+        "@type": "Person",
+        "@id": "https://global-elite-1m-team.vercel.app/#founder",
+        name: founderName,
+        alternateName: ["MD Joy Hossen", "Joy Hossen"],
+        jobTitle: "Founder",
+        image: founderImg.startsWith("http")
+          ? founderImg
+          : `https://global-elite-1m-team.vercel.app${founderImg}`,
+        url: "https://global-elite-1m-team.vercel.app/md-joy-hossen",
+        worksFor: {
+          "@type": "Organization",
+          name: "GLOBAL ELITE 1M TEAM",
+          url: "https://global-elite-1m-team.vercel.app/",
+        },
+      },
+    },
+  });
 
   return (
     <div className="space-y-14 pb-16">
@@ -61,7 +92,7 @@ export default function Team() {
           transition={{ duration: 0.6, delay: 0.14, ease: EASE_OUT_EXPO }}
           className="text-base md:text-lg text-zinc-400 leading-relaxed"
         >
-          Led by our Founder alongside a unified team of builders executing together across GLOBAL ELITE 1M TEAM.
+          Led by Founder {founderName} alongside a unified team of builders executing together across GLOBAL ELITE 1M TEAM.
         </motion.p>
       </div>
 
@@ -78,14 +109,14 @@ export default function Team() {
                 {founderImg ? (
                   <img
                     src={founderImg}
-                    alt={founder.name}
-                    loading="lazy"
+                    alt={`${founderName} — Founder of GLOBAL ELITE 1M TEAM`}
+                    loading="eager"
                     decoding="async"
-                    className="w-16 h-16 rounded-2xl border border-primary/40 object-cover shrink-0"
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-primary/45 object-cover object-top shrink-0"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-2xl border border-primary/40 bg-primary/10 flex items-center justify-center shrink-0">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-primary/40 bg-primary/10 flex items-center justify-center shrink-0">
                     <span className="font-heading text-xl font-semibold text-primary tracking-tight">
                       {founder.initials}
                     </span>
@@ -96,8 +127,20 @@ export default function Team() {
                     Founder
                   </p>
                   <h2 className="font-heading text-3xl sm:text-4xl font-semibold text-zinc-50">
-                    {founder.name}
+                    <Link
+                      to="/md-joy-hossen"
+                      className="hover:text-primary transition-colors"
+                    >
+                      {founderName}
+                    </Link>
                   </h2>
+                  <Link
+                    to="/md-joy-hossen"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-primary/90 hover:text-primary transition-colors pt-1"
+                  >
+                    View Founder Profile
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
               </div>
 
@@ -115,7 +158,7 @@ export default function Team() {
                         href={founderLinkedIn}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label={`${founder.name} LinkedIn`}
+                        aria-label={`${founderName} LinkedIn`}
                         className="w-11 h-11 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors flex items-center justify-center"
                       >
                         <Linkedin className="w-4 h-4" />
@@ -126,7 +169,7 @@ export default function Team() {
                         href={founderTwitter}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label={`${founder.name} Twitter`}
+                        aria-label={`${founderName} Twitter`}
                         className="w-11 h-11 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors flex items-center justify-center"
                       >
                         <Twitter className="w-4 h-4" />
@@ -135,7 +178,7 @@ export default function Team() {
                     {founderMail && (
                       <a
                         href={founderMail}
-                        aria-label={`Email ${founder.name}`}
+                        aria-label={`Email ${founderName}`}
                         className="w-11 h-11 rounded-lg border border-white/10 text-zinc-400 hover:text-primary hover:border-primary/40 transition-colors flex items-center justify-center"
                       >
                         <Mail className="w-4 h-4" />

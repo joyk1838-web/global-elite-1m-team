@@ -8,6 +8,7 @@ export const LOCAL_ASSETS = {
   corporateHq: corporateHqImg,
   strategyRoom: strategyRoomImg,
   globalNetwork: globalNetworkImg,
+  founderPortrait: "/assets/aistudio/IMG_7573_d82d520e.jpeg",
 };
 
 export interface SiteConfigData {
@@ -44,9 +45,9 @@ export const DEFAULT_SITE_CONFIG: SiteConfigData = {
     "From $1K to $1M and beyond. Engineering a disciplined portfolio of high-conviction ventures built for financial sovereignty and global scale.",
   mission: "Scale from $1K to $1M and achieve enduring financial freedom.",
   vision: "A borderless portfolio of category-leading enterprises by 2030.",
-  mdName: "MD Joy Hossen",
+  mdName: "MD JOY HOSSEN",
   mdRole: "Founder",
-  mdImage: "",
+  mdImage: "/assets/aistudio/IMG_7573_d82d520e.jpeg",
   mdQuote: "Vision without execution is merely an ambition.",
   mdBannerQuote:
     "We are not simply building a company; we are building an enduring institution where financial independence is the baseline and global impact is the standard.",
@@ -95,10 +96,10 @@ export const DEFAULT_BRANDS = [
 export const DEFAULT_TEAM = [
   {
     id: "joy",
-    name: "MD Joy Hossen",
+    name: "MD JOY HOSSEN",
     role: "Founder",
-    bio: "Founder of ELITE GROUP, directing long-term vision, capital discipline, and ecosystem growth.",
-    image: "",
+    bio: "Founder of GLOBAL ELITE 1M TEAM (ELITE GROUP), directing long-term vision, capital discipline, and ecosystem growth.",
+    image: "/assets/aistudio/IMG_7573_d82d520e.jpeg",
     badges: [] as string[],
     initials: "JH",
     email: "",
@@ -187,11 +188,19 @@ export function getMemberInitials(member: any): string {
 export function normalizeTeamMembers(members: any[]): any[] {
   return (members || []).map((member) => {
     const founder = isFounderMember(member);
+    const rawImage = typeof member?.image === "string" ? member.image.trim() : "";
+    const rawName = String(member?.name || "").trim();
+    const displayName =
+      founder && rawName.toLowerCase() === "md joy hossen"
+        ? "MD JOY HOSSEN"
+        : rawName;
+
     return {
       ...member,
+      name: displayName || member?.name || "",
       role: founder ? "Founder" : "Team Member",
       badges: [],
-      image: typeof member?.image === "string" ? member.image : "",
+      image: rawImage || (founder ? LOCAL_ASSETS.founderPortrait : ""),
       initials: getMemberInitials(member),
     };
   });
@@ -316,6 +325,13 @@ export const SERIES_ONE_ASSETS = [
 ];
 
 export const DEFAULT_GALLERY = [
+  {
+    id: "gal-founder-joy",
+    url: "/assets/aistudio/IMG_7573_d82d520e.jpeg",
+    title: "MD JOY HOSSEN — Founder of GLOBAL ELITE 1M TEAM",
+    category: "Leadership",
+    uploadedAt: "2026-11-24T18:00:00.000Z",
+  },
   {
     id: "gal-s1-1",
     url: "/assets/aistudio/IMG_8920_ff6da8e6.png",

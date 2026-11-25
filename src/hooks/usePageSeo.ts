@@ -9,6 +9,14 @@ export interface PageSeoOptions {
   description: string;
   path: string;
   noindex?: boolean;
+  image?: string;
+  jsonLd?: Record<string, unknown>;
+}
+
+function toAbsoluteUrl(src: string | undefined): string {
+  if (!src) return DEFAULT_OG_IMAGE;
+  if (/^https?:\/\//i.test(src)) return src;
+  return `${SITE_ORIGIN}${src.startsWith("/") ? src : `/${src}`}`;
 }
 
 function upsertMeta(attr: "name" | "property", key: string, content: string) {
@@ -31,11 +39,21 @@ function upsertCanonical(href: string) {
   link.setAttribute("href", href);
 }
 
-export function usePageSeo({ title, description, path, noindex = false }: PageSeoOptions) {
+export function usePageSeo({
+  title,
+  description,
+  path,
+  noindex = false,
+  image,
+  jsonLd,
+}: PageSeoOptions) {
+  const jsonLdSerialized = jsonLd ? JSON.stringify(jsonLd) : "";
+
   useEffect(() => {
     const cleanPath = path.startsWith("/") ? path : `/${path}`;
     const canonicalUrl = `${SITE_ORIGIN}${cleanPath === "/" ? "/" : cleanPath}`;
     const fullTitle = title.includes(BRAND_NAME) ? title : `${title} | ${BRAND_NAME}`;
+    const resolvedImage = toAbsoluteUrl(image);
 
     document.title = fullTitle;
     upsertMeta("name", "description", description);
@@ -46,10 +64,28 @@ export function usePageSeo({ title, description, path, noindex = false }: PageSe
     upsertMeta("property", "og:description", description);
     upsertMeta("property", "og:url", canonicalUrl);
     upsertMeta("property", "og:site_name", BRAND_NAME);
-    upsertMeta("property", "og:image", DEFAULT_OG_IMAGE);
+    upsertMeta("property", "og:image", resolvedImage);
 
     upsertMeta("name", "twitter:title", fullTitle);
     upsertMeta("name", "twitter:description", description);
-    upsertMeta("name", "twitter:image", DEFAULT_OG_IMAGE);
-  }, [title, description, path, noindex]);
+    upsertMeta("name", "twitter:image", resolvedImage);
+
+    const existingScript = document.head.querySelector('script[data-route-jsonld="true"]');
+    if (jsonLdSerialized) {
+      const script = existingScript || document.createElement("script");
+      script.setAttribute("type", "application/ld+json");
+      script.setAttribute("data-route-jsonld", "true");
+      script.textContent = jsonLdSerialized;
+      if (!existingScript) {
+        document.head.appendChild(script);
+      }
+    } else if (existingScript) {
+      existingScript.remove();
+    }
+
+    return () => {
+      const routeScript = document.head.querySelector('script[data-route-jsonld="true"]');
+      if (routeScript) routeScript.remove();
+    };
+  }, [title, description, path, noindex, image, jsonLdSerialized]);
 }
